@@ -8,31 +8,110 @@ class Produto {
     }
 
     aplicarDesconto() {
-        this.preco = this.preco - (this.preco * this.desconto / 100);
+        return this.preco - (this.preco * this.desconto / 100);
     }
 
     exibir() {
-        document.getElementById("resultado").innerHTML = `
-            <h2>Produto cadastrado</h2>
-            <p>Nome: ${this.nome}</p>
-            <p>Preço: R$ ${this.preco.toFixed(2)}</p>
-            <p>Categoria: ${this.categoria}</p>
-            <p>Desconto: ${this.desconto}%</p>
+
+        let precoComDesconto = this.aplicarDesconto();
+
+        return `
+            <div class="produto">
+                <h2>${this.nome}</h2>
+
+                <p>
+                    <strong>Preço:</strong>
+                    R$ ${precoComDesconto.toFixed(2)}
+                </p>
+
+                <p>
+                    <strong>Categoria:</strong>
+                    ${this.categoria}
+                </p>
+
+                <p>
+                    <strong>Desconto:</strong>
+                    ${this.desconto}%
+                </p>
+
+                <button 
+                    class="excluir"
+                    onclick="excluirProduto('${this.nome}')">
+                    Excluir Produto
+                </button>
+
+            </div>
         `;
     }
 }
 
-document.getElementById("formProduto").addEventListener("submit", function(event) {
+
+const produtos = [];
+
+const formulario = document.getElementById("formProduto");
+const resultado = document.getElementById("resultado");
+
+
+formulario.addEventListener("submit", function(event) {
 
     event.preventDefault();
 
-    let nome = document.getElementById("nome").value;
-    let preco = parseFloat(document.getElementById("preco").value);
-    let categoria = document.getElementById("categoria").value;
-    let desconto = parseFloat(document.getElementById("desconto").value);
+    const nome = document.getElementById("nome").value;
 
-    let produto = new Produto(nome, preco, categoria, desconto);
+    const preco = Number(
+        document.getElementById("preco").value
+    );
 
-    produto.aplicarDesconto();
-    produto.exibir();
+    const categoria = document.getElementById("categoria").value;
+
+    const desconto = Number(
+        document.getElementById("desconto").value
+    );
+
+
+    const produto = new Produto(
+        nome,
+        preco,
+        categoria,
+        desconto
+    );
+
+
+    produtos.push(produto);
+
+    mostrarProdutos();
+
+    formulario.reset();
 });
+
+
+function mostrarProdutos() {
+
+    resultado.innerHTML = "";
+
+    produtos.forEach(function(produto) {
+
+        resultado.innerHTML += produto.exibir();
+
+    });
+}
+
+
+// FUNÇÃO PARA EXCLUIR O PRODUTO
+function excluirProduto(nome) {
+
+    const indice = produtos.findIndex(function(produto) {
+
+        return produto.nome === nome;
+
+    });
+
+
+    if (indice !== -1) {
+
+        produtos.splice(indice, 1);
+
+        mostrarProdutos();
+
+    }
+}
