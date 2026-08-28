@@ -11,7 +11,7 @@ class Produto {
         return this.preco - (this.preco * this.desconto / 100);
     }
 
-    exibir() {
+    exibir(indice) {
 
         let precoComDesconto = this.aplicarDesconto();
 
@@ -19,38 +19,47 @@ class Produto {
             <div class="produto">
                 <h2>${this.nome}</h2>
 
-                <p>
-                    <strong>Preço:</strong>
-                    R$ ${precoComDesconto.toFixed(2)}
-                </p>
+                <p><strong>Preço:</strong> 
+                R$ ${precoComDesconto.toFixed(2)}</p>
 
-                <p>
-                    <strong>Categoria:</strong>
-                    ${this.categoria}
-                </p>
+                <p><strong>Categoria:</strong> 
+                ${this.categoria}</p>
 
-                <p>
-                    <strong>Desconto:</strong>
-                    ${this.desconto}%
-                </p>
+                <p><strong>Desconto:</strong> 
+                ${this.desconto}%</p>
 
-                <button 
-                    class="excluir"
-                    onclick="excluirProduto('${this.nome}')">
-                    Excluir Produto
+                <button onclick="excluirProduto(${indice})">
+                    Excluir
                 </button>
-
             </div>
         `;
     }
 }
-
 
 const produtos = [];
 
 const formulario = document.getElementById("formProduto");
 const resultado = document.getElementById("resultado");
 
+const produtosSalvos = JSON.parse(localStorage.getItem("produtos"));
+
+if (produtosSalvos) {
+
+    produtosSalvos.forEach(function(produto) {
+
+        produtos.push(
+            new Produto(
+                produto.nome,
+                produto.preco,
+                produto.categoria,
+                produto.desconto
+            )
+        );
+
+    });
+
+    mostrarProdutos();
+}
 
 formulario.addEventListener("submit", function(event) {
 
@@ -76,42 +85,39 @@ formulario.addEventListener("submit", function(event) {
         desconto
     );
 
-
     produtos.push(produto);
+
+    localStorage.setItem(
+        "produtos",
+        JSON.stringify(produtos)
+    );
+
 
     mostrarProdutos();
 
     formulario.reset();
 });
 
-
 function mostrarProdutos() {
 
     resultado.innerHTML = "";
 
-    produtos.forEach(function(produto) {
+    produtos.forEach(function(produto, indice) {
 
-        resultado.innerHTML += produto.exibir();
+        resultado.innerHTML += produto.exibir(indice);
 
     });
 }
 
+function excluirProduto(indice) {
 
-// FUNÇÃO PARA EXCLUIR O PRODUTO
-function excluirProduto(nome) {
+    produtos.splice(indice, 1);
 
-    const indice = produtos.findIndex(function(produto) {
-
-        return produto.nome === nome;
-
-    });
+    localStorage.setItem(
+        "produtos",
+        JSON.stringify(produtos)
+    );
 
 
-    if (indice !== -1) {
-
-        produtos.splice(indice, 1);
-
-        mostrarProdutos();
-
-    }
+    mostrarProdutos();
 }
