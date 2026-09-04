@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Localização e Câmera</title>
+
+    <link rel="stylesheet" href="atividade1.css">
+</head>
+
+<body>
+
+    <!-- TELA ENQUANTO AGUARDA A LOCALIZAÇÃO -->
+    <div id="telaInicial" class="tela-inicial">
+
+        <div class="icone">📍</div>
+
+        <h1>Precisamos da sua localização</h1>
+
+        <p>
+            Permita o acesso à sua localização para continuar.
+        </p>
+
+        <div class="carregando">
+            <div class="spinner"></div>
+            <span>Aguardando permissão...</span>
+        </div>
+
+    </div>
+
+
+    <!-- TELA PRINCIPAL -->
+    <main id="conteudo" class="container">
+
+        <header>
+            <div class="icone-header">📍</div>
+
+            <div>
+                <h1>Localização & Câmera</h1>
+                <p>Informações obtidas através das Web APIs.</p>
+            </div>
+        </header>
+
+
+        <section class="cards">
+
+            <!-- LOCALIZAÇÃO -->
+            <div class="card">
+
+                <div class="titulo-card">
+                    <span>📍</span>
+
+                    <div>
+                        <h2>Localização</h2>
+                        <small>✅ Acesso permitido</small>
+                    </div>
+                </div>
+
+
+                <div class="dados">
+
+                    <div class="dado">
+                        <label>Latitude</label>
+                        <strong id="latitude">Aguardando...</strong>
+                    </div>
+
+                    <div class="dado">
+                        <label>Longitude</label>
+                        <strong id="longitude">Aguardando...</strong>
+                    </div>
+
+                    <div class="dado">
+                        <label>Precisão</label>
+                        <strong id="precisao">Aguardando...</strong>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- CÂMERA -->
+            <div class="card">
+
+                <div class="titulo-card">
+                    <span>📷</span>
+
+                    <div>
+                        <h2>Câmera</h2>
+                        <small>Solicite o acesso abaixo</small>
+                    </div>
+                </div>
+
+
+                <div class="camera">
+
+                    <video
+                        id="camera"
+                        autoplay
+                        playsinline>
+                    </video>
+
+                    <div id="mensagemCamera" class="mensagem-camera">
+                        <span>📷</span>
+                        <p>Câmera desativada</p>
+                    </div>
+
+                </div>
+
+
+                <button onclick="abrirCamera()">
+                    📷 Ativar câmera
+                </button>
+
+            </div>
+
+        </section>
+
+
+        <footer>
+            Geolocation API • MediaDevices API
+        </footer>
+
+    </main>
+
+
+    <!-- TELA DE ERRO -->
+    <div id="erro" class="erro">
+
+        <div class="icone-erro">❌</div>
+
+        <h1>Localização não permitida</h1>
+
+        <p>
+            Você precisa permitir o acesso à localização
+            para visualizar o conteúdo.
+        </p>
+
+    </div>
+
+
+    <script src="atividade1.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,416 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+
+    min-height: 100vh;
+
+    background:
+        radial-gradient(circle at top left, #334155, transparent 40%),
+        radial-gradient(circle at bottom right, #4f46e5, transparent 40%),
+        #0f172a;
+
+    color: white;
+
+    padding: 30px 20px;
+}
+
+
+/* =========================
+   TELA INICIAL
+========================= */
+
+.tela-inicial {
+    min-height: 90vh;
+
+    display: flex;
+    flex-direction: column;
+
+    justify-content: center;
+    align-items: center;
+
+    text-align: center;
+}
+
+.tela-inicial .icone {
+    width: 90px;
+    height: 90px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    border-radius: 25px;
+
+    font-size: 45px;
+
+    margin-bottom: 25px;
+}
+
+.tela-inicial h1 {
+    font-size: 30px;
+    margin-bottom: 12px;
+}
+
+.tela-inicial p {
+    color: #cbd5e1;
+
+    max-width: 450px;
+}
+
+
+/* CARREGAMENTO */
+
+.carregando {
+    margin-top: 30px;
+
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    color: #cbd5e1;
+}
+
+.spinner {
+    width: 22px;
+    height: 22px;
+
+    border: 3px solid rgba(255, 255, 255, 0.2);
+
+    border-top-color: white;
+
+    border-radius: 50%;
+
+    animation: girar 1s linear infinite;
+}
+
+@keyframes girar {
+
+    to {
+        transform: rotate(360deg);
+    }
+
+}
+
+
+/* =========================
+   CONTEÚDO
+========================= */
+
+.container {
+    display: none;
+
+    width: 100%;
+    max-width: 1100px;
+
+    margin: auto;
+}
+
+
+/* HEADER */
+
+header {
+    display: flex;
+
+    align-items: center;
+
+    gap: 18px;
+
+    margin-bottom: 30px;
+}
+
+.icone-header {
+    width: 60px;
+    height: 60px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.12);
+
+    border-radius: 18px;
+
+    font-size: 30px;
+}
+
+header h1 {
+    font-size: 30px;
+
+    margin-bottom: 5px;
+}
+
+header p {
+    color: #cbd5e1;
+}
+
+
+/* =========================
+   CARDS
+========================= */
+
+.cards {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 25px;
+}
+
+.card {
+    background: rgba(255, 255, 255, 0.09);
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    border-radius: 20px;
+
+    padding: 25px;
+
+    backdrop-filter: blur(15px);
+
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+}
+
+
+/* TÍTULO DO CARD */
+
+.titulo-card {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    margin-bottom: 25px;
+}
+
+.titulo-card > span {
+    width: 50px;
+    height: 50px;
+
+    display: flex;
+
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(255, 255, 255, 0.1);
+
+    border-radius: 14px;
+
+    font-size: 24px;
+}
+
+.titulo-card h2 {
+    margin-bottom: 5px;
+}
+
+.titulo-card small {
+    color: #86efac;
+}
+
+
+/* =========================
+   LOCALIZAÇÃO
+========================= */
+
+.dados {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+.dado {
+    background: rgba(0, 0, 0, 0.2);
+
+    padding: 15px;
+
+    border-radius: 12px;
+}
+
+.dado label {
+    display: block;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+
+    margin-bottom: 6px;
+}
+
+.dado strong {
+    font-size: 15px;
+
+    word-break: break-all;
+}
+
+
+/* =========================
+   CÂMERA
+========================= */
+
+.camera {
+    position: relative;
+
+    width: 100%;
+
+    height: 300px;
+
+    background: #020617;
+
+    border-radius: 15px;
+
+    overflow: hidden;
+
+    margin-bottom: 15px;
+}
+
+.camera video {
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.mensagem-camera {
+    position: absolute;
+
+    inset: 0;
+
+    display: flex;
+
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    background: rgba(2, 6, 23, 0.75);
+}
+
+.mensagem-camera span {
+    font-size: 40px;
+}
+
+.mensagem-camera p {
+    color: #cbd5e1;
+}
+
+
+/* =========================
+   BOTÃO
+========================= */
+
+button {
+    width: 100%;
+
+    padding: 14px;
+
+    border: none;
+
+    border-radius: 12px;
+
+    background: linear-gradient(
+        135deg,
+        #4f46e5,
+        #7c3aed
+    );
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+button:hover {
+    transform: translateY(-2px);
+
+    box-shadow:
+        0 8px 25px rgba(79, 70, 229, 0.4);
+}
+
+
+/* =========================
+   ERRO
+========================= */
+
+.erro {
+    display: none;
+
+    min-height: 90vh;
+
+    flex-direction: column;
+
+    align-items: center;
+
+    justify-content: center;
+
+    text-align: center;
+}
+
+.icone-erro {
+    font-size: 70px;
+
+    margin-bottom: 20px;
+}
+
+.erro h1 {
+    margin-bottom: 10px;
+}
+
+.erro p {
+    color: #cbd5e1;
+
+    max-width: 450px;
+}
+
+
+/* =========================
+   RODAPÉ
+========================= */
+
+footer {
+    text-align: center;
+
+    margin-top: 30px;
+
+    color: #94a3b8;
+
+    font-size: 12px;
+}
+
+
+/* =========================
+   CELULAR
+========================= */
+
+@media (max-width: 750px) {
+
+    .cards {
+        grid-template-columns: 1fr;
+    }
+
+    header h1 {
+        font-size: 24px;
+    }
+
+    .camera {
+        height: 250px;
+    }
+
+}
