@@ -1,117 +1,5699 @@
-```html
 <!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
-
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0"
-    >
+    <title>Torre X1</title>
 
-    <title>X1 Arena Multiplayer</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    <link rel="stylesheet" href="exemplo.css">
+        body {
+            min-height: 100vh;
 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background:
+                radial-gradient(
+                    circle at top,
+                    #2b2b2b 0%,
+                    #070707 75%
+                );
+
+            color: white;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+
+            overflow: hidden;
+        }
+
+        .container {
+            width: min(1200px, 97vw);
+
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 36px;
+
+            letter-spacing: 6px;
+
+            margin-bottom: 5px;
+        }
+
+        .subtitulo {
+            color: #999;
+
+            font-size: 14px;
+
+            margin-bottom: 12px;
+        }
+
+        canvas {
+            width: 100%;
+            max-width: 1200px;
+
+            height: auto;
+
+            display: block;
+
+            margin: auto;
+
+            border:
+                3px solid #3c3c3c;
+
+            border-radius: 14px;
+
+            background: #080808;
+
+            box-shadow:
+                0 0 50px
+                rgba(0, 0, 0, .85);
+        }
+
+        .controles {
+            margin-top: 10px;
+
+            color: #858585;
+
+            font-size: 13px;
+        }
+
+        .controles strong {
+            color: white;
+        }
+    </style>
 </head>
 
 <body>
 
-    <div class="topo">
+<div class="container">
 
-        <h1>X1 ARENA</h1>
+    <h1>TORRE X1</h1>
 
-        <p id="status">
-            Procurando adversário...
-        </p>
-
+    <div class="subtitulo">
+        Evolua • compre roupas • conquiste a torre
     </div>
 
-    <div class="placar">
-
-        <div class="player-info">
-
-            <span>JOGADOR 1</span>
-
-            <div class="barra">
-
-                <div
-                    id="vida1"
-                    class="vida"
-                ></div>
-
-            </div>
-
-            <strong id="textoVida1">
-                100 HP
-            </strong>
-
-        </div>
-
-        <div class="vs">
-            VS
-        </div>
-
-        <div class="player-info">
-
-            <span>JOGADOR 2</span>
-
-            <div class="barra">
-
-                <div
-                    id="vida2"
-                    class="vida"
-                ></div>
-
-            </div>
-
-            <strong id="textoVida2">
-                100 HP
-            </strong>
-
-        </div>
-
-    </div>
-
-    <div class="arena-container">
-
-        <canvas
-            id="canvas"
-            width="900"
-            height="500"
-        ></canvas>
-
-        <div
-            id="mensagem"
-            class="mensagem escondido"
-        >
-        </div>
-
-    </div>
+    <canvas
+        id="canvas"
+        width="1200"
+        height="720">
+    </canvas>
 
     <div class="controles">
 
-        <h2>CONTROLES</h2>
-
-        <p>
-            <strong>W A S D</strong>
-            ou
-            <strong>SETAS</strong>
-            para movimentar
-        </p>
-
-        <p>
-            Encoste no adversário para atacar.
-        </p>
+        <strong>A / D</strong> mover •
+        <strong>W</strong> pular •
+        <strong>S</strong> agachar •
+        <strong>J</strong> soco •
+        <strong>K</strong> chute •
+        <strong>L</strong> defesa •
+        <strong>SHIFT</strong> dash •
+        <strong>E</strong> especial
 
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="exemplo.js"></script>
+</div>
+
+<script>
+
+// ======================================================
+// CANVAS
+// ======================================================
+
+const canvas =
+    document.getElementById("canvas");
+
+const ctx =
+    canvas.getContext("2d");
+
+const W =
+    canvas.width;
+
+const H =
+    canvas.height;
+
+const CHAO =
+    575;
+
+
+// ======================================================
+// ESTADO
+// ======================================================
+
+let tela = "menu";
+
+let andar = 1;
+
+let moedas =
+    Number(
+        localStorage.getItem(
+            "x1_moedas"
+        ) || 500
+    );
+
+let xp =
+    Number(
+        localStorage.getItem(
+            "x1_xp"
+        ) || 0
+    );
+
+let nivel =
+    Number(
+        localStorage.getItem(
+            "x1_nivel"
+        ) || 1
+    );
+
+let skinAtual =
+    localStorage.getItem(
+        "x1_skin"
+    ) || "azul";
+
+let roupaAtual =
+    localStorage.getItem(
+        "x1_roupa"
+    ) || "nenhuma";
+
+let roupasCompradas =
+    JSON.parse(
+        localStorage.getItem(
+            "x1_roupas"
+        ) ||
+        '["nenhuma"]'
+    );
+
+let classeAtual =
+    localStorage.getItem(
+        "x1_classe"
+    ) || "guerreiro";
+
+let pontos = 0;
+
+let combo = 0;
+
+let maiorCombo = 0;
+
+let esperando = false;
+
+let fim = false;
+
+let textoPopup = "";
+
+let popupTimer = 0;
+
+
+// ======================================================
+// ÁUDIO
+// ======================================================
+
+let audio = null;
+
+function iniciarAudio() {
+
+    if (!audio) {
+
+        audio =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+
+    }
+
+    if (
+        audio.state ===
+        "suspended"
+    ) {
+
+        audio.resume();
+
+    }
+}
+
+
+function beep(
+    frequencia,
+    duracao,
+    tipo = "square",
+    volume = 0.04
+) {
+
+    iniciarAudio();
+
+    const osc =
+        audio.createOscillator();
+
+    const ganho =
+        audio.createGain();
+
+    osc.type =
+        tipo;
+
+    osc.frequency.value =
+        frequencia;
+
+    ganho.gain.setValueAtTime(
+        volume,
+        audio.currentTime
+    );
+
+    ganho.gain.exponentialRampToValueAtTime(
+        0.001,
+        audio.currentTime +
+        duracao
+    );
+
+    osc.connect(ganho);
+
+    ganho.connect(
+        audio.destination
+    );
+
+    osc.start();
+
+    osc.stop(
+        audio.currentTime +
+        duracao
+    );
+}
+
+
+// ======================================================
+// PARTÍCULAS
+// ======================================================
+
+let particulas = [];
+
+
+function criarParticulas(
+    x,
+    y,
+    cor,
+    quantidade = 10
+) {
+
+    for (
+        let i = 0;
+        i < quantidade;
+        i++
+    ) {
+
+        particulas.push({
+
+            x: x,
+
+            y: y,
+
+            vx:
+                Math.random() *
+                8 -
+                4,
+
+            vy:
+                Math.random() *
+                -8 -
+                1,
+
+            vida:
+                25 +
+                Math.random() *
+                30,
+
+            tamanho:
+                2 +
+                Math.random() *
+                4,
+
+            cor: cor
+
+        });
+
+    }
+
+}
+
+
+function atualizarParticulas() {
+
+    for (
+        let i =
+            particulas.length - 1;
+        i >= 0;
+        i--
+    ) {
+
+        const p =
+            particulas[i];
+
+        p.x +=
+            p.vx;
+
+        p.y +=
+            p.vy;
+
+        p.vy +=
+            0.35;
+
+        p.vida--;
+
+        if (
+            p.vida <= 0
+        ) {
+
+            particulas.splice(
+                i,
+                1
+            );
+
+        }
+
+    }
+
+}
+
+
+function desenharParticulas() {
+
+    particulas.forEach(
+        p => {
+
+            ctx.globalAlpha =
+                Math.max(
+                    0,
+                    p.vida / 50
+                );
+
+            ctx.fillStyle =
+                p.cor;
+
+            ctx.fillRect(
+                p.x,
+                p.y,
+                p.tamanho,
+                p.tamanho
+            );
+
+        }
+    );
+
+    ctx.globalAlpha = 1;
+}
+
+
+// ======================================================
+// POPUP
+// ======================================================
+
+function popup(
+    texto
+) {
+
+    textoPopup =
+        texto;
+
+    popupTimer =
+        130;
+}
+
+
+// ======================================================
+// ROUPAS
+// ======================================================
+
+const roupas = {
+
+    nenhuma: {
+        nome:
+            "Roupa Padrão",
+
+        preco:
+            0,
+
+        cor:
+            null,
+
+        acessorio:
+            "nenhum"
+    },
+
+    ninja: {
+        nome:
+            "Roupa Ninja",
+
+        preco:
+            600,
+
+        cor:
+            "#292929",
+
+        acessorio:
+            "faixa"
+    },
+
+    samurai: {
+        nome:
+            "Armadura Samurai",
+
+        preco:
+            1200,
+
+        cor:
+            "#808080",
+
+        acessorio:
+            "samurai"
+    },
+
+    rei: {
+        nome:
+            "Roupa do Rei",
+
+        preco:
+            2000,
+
+        cor:
+            "#6946d7",
+
+        acessorio:
+            "coroa"
+    },
+
+    futurista: {
+        nome:
+            "Traje Futurista",
+
+        preco:
+            3000,
+
+        cor:
+            "#19b9aa",
+
+        acessorio:
+            "visor"
+    },
+
+    campeao: {
+        nome:
+            "Uniforme Campeão",
+
+        preco:
+            4500,
+
+        cor:
+            "#b79338",
+
+        acessorio:
+            "manto"
+    }
+};
+
+
+// ======================================================
+// SKINS
+// ======================================================
+
+const skins = {
+
+    azul: {
+
+        nome:
+            "Azul",
+
+        corpo:
+            "#357cff",
+
+        detalhe:
+            "#9fc4ff",
+
+        efeito:
+            "#7dafff"
+    },
+
+    vermelho: {
+
+        nome:
+            "Vermelho",
+
+        corpo:
+            "#de4444",
+
+        detalhe:
+            "#ff9999",
+
+        efeito:
+            "#ff6a6a"
+    },
+
+    sombra: {
+
+        nome:
+            "Sombra",
+
+        corpo:
+            "#762ce4",
+
+        detalhe:
+            "#d0a9ff",
+
+        efeito:
+            "#b077ff"
+    }
+};
+
+
+// ======================================================
+// CLASSES
+// ======================================================
+
+const classes = {
+
+    guerreiro: {
+
+        nome:
+            "GUERREIRO",
+
+        vida:
+            1000,
+
+        ataque:
+            11,
+
+        velocidade:
+            5,
+
+        energia:
+            100
+    },
+
+    tanque: {
+
+        nome:
+            "TANQUE",
+
+        vida:
+            1000,
+
+        ataque:
+            9,
+
+        velocidade:
+            3.7,
+
+        energia:
+            120
+    },
+
+    veloz: {
+
+        nome:
+            "VELOZ",
+
+        vida:
+            1000,
+
+        ataque:
+            9,
+
+        velocidade:
+            7,
+
+        energia:
+            90
+    }
+};
+
+
+// ======================================================
+// JOGADOR
+// ======================================================
+
+const jogador = {
+
+    x:
+        230,
+
+    y:
+        CHAO - 92,
+
+    largura:
+        52,
+
+    altura:
+        92,
+
+    vx:
+        0,
+
+    vy:
+        0,
+
+    noAr:
+        false,
+
+    olhando:
+        1,
+
+    // PLAYER TEM 1000 HP
+    vida:
+        1000,
+
+    vidaMax:
+        1000,
+
+    energia:
+        100,
+
+    energiaMax:
+        100,
+
+    ataque:
+        11,
+
+    velocidade:
+        5,
+
+    atacando:
+        false,
+
+    tipoAtaque:
+        "",
+
+    ataqueTimer:
+        0,
+
+    defendendo:
+        false,
+
+    agachado:
+        false,
+
+    invulneravel:
+        0,
+
+    dashTimer:
+        0,
+
+    especialTimer:
+        0,
+
+    // dança
+    dancando:
+        false,
+
+    dancaTimer:
+        0
+
+};
+
+
+// ======================================================
+// BOSS / INIMIGO
+// ======================================================
+
+const inimigo = {
+
+    x:
+        850,
+
+    y:
+        CHAO - 92,
+
+    largura:
+        52,
+
+    altura:
+        92,
+
+    vida:
+        100,
+
+    vidaMax:
+        100,
+
+    ataque:
+        7,
+
+    velocidade:
+        1.3,
+
+    olhando:
+        -1,
+
+    atacando:
+        false,
+
+    ataqueTimer:
+        0,
+
+    invulneravel:
+        0,
+
+    contadorAtaque:
+        80,
+
+    boss:
+        false,
+
+    nome:
+        "RIVAL",
+
+    golpeEspecialTimer:
+        0
+
+};
+
+
+// ======================================================
+// ANDARES
+// ======================================================
+
+const dadosAndares = [
+
+    {
+        nome:
+            "NOVATO",
+
+        vida:
+            350,
+
+        ataque:
+            18,
+
+        velocidade:
+            1.15,
+
+        boss:
+            false
+    },
+
+    {
+        nome:
+            "LUTADOR",
+
+        vida:
+            500,
+
+        ataque:
+            20,
+
+        velocidade:
+            1.25,
+
+        boss:
+            false
+    },
+
+    {
+        nome:
+            "VETERANO",
+
+        vida:
+            700,
+
+        ataque:
+            22,
+
+        velocidade:
+            1.4,
+
+        boss:
+            false
+    },
+
+    {
+        nome:
+            "MESTRE",
+
+        vida:
+            900,
+
+        ataque:
+            25,
+
+        velocidade:
+            1.55,
+
+        boss:
+            false
+    },
+
+    {
+        nome:
+            "ELITE",
+
+        vida:
+            1200,
+
+        ataque:
+            28,
+
+        velocidade:
+            1.7,
+
+        boss:
+            false
+    },
+
+    {
+        nome:
+            "CAMPEÃO",
+
+        vida:
+            1600,
+
+        ataque:
+            30,
+
+        velocidade:
+            1.85,
+
+        boss:
+            false
+    },
+
+    {
+        nome:
+            "GUARDIÃO",
+
+        vida:
+            2200,
+
+        ataque:
+            35,
+
+        velocidade:
+            2,
+
+        boss:
+            false
+    },
+
+    {
+        // BOSS FINAL
+        nome:
+            "JV GAMERO",
+
+        vida:
+            5000,
+
+        ataque:
+            45,
+
+        velocidade:
+            1.55,
+
+        boss:
+            true
+    }
+
+];
+
+
+// ======================================================
+// TECLAS
+// ======================================================
+
+const teclas = {};
+
+
+document.addEventListener(
+    "keydown",
+    e => {
+
+        const tecla =
+            e.key.toLowerCase();
+
+        teclas[tecla] =
+            true;
+
+
+        if (
+            [
+                "a",
+                "d",
+                "w",
+                "s",
+                "j",
+                "k",
+                "l",
+                "shift",
+                "e",
+                "enter",
+                "escape"
+            ].includes(tecla)
+        ) {
+
+            e.preventDefault();
+
+        }
+
+
+        iniciarAudio();
+
+
+        // MENU
+        if (
+            tela ===
+            "menu"
+        ) {
+
+            if (
+                tecla ===
+                "enter"
+            ) {
+
+                iniciarTorre();
+
+            }
+
+        }
+
+
+        // LOJA
+        if (
+            tela ===
+            "loja"
+        ) {
+
+            const numero =
+                Number(tecla);
+
+            if (
+                numero >= 1 &&
+                numero <= 6
+            ) {
+
+                const ids =
+                    Object.keys(
+                        roupas
+                    );
+
+                comprarOuEquiparRoupa(
+                    ids[
+                        numero - 1
+                    ]
+                );
+
+            }
+
+        }
+
+
+        // CLASSES
+        if (
+            tela ===
+            "personagem"
+        ) {
+
+            if (
+                tecla === "1"
+            ) {
+
+                escolherClasse(
+                    "guerreiro"
+                );
+
+            }
+
+            if (
+                tecla === "2"
+            ) {
+
+                escolherClasse(
+                    "tanque"
+                );
+
+            }
+
+            if (
+                tecla === "3"
+            ) {
+
+                escolherClasse(
+                    "veloz"
+                );
+
+            }
+
+        }
+
+
+        // FINAL
+        if (
+            fim &&
+            tecla ===
+            "enter"
+        ) {
+
+            tela =
+                "menu";
+
+            fim =
+                false;
+
+            jogador.dancando =
+                false;
+
+        }
+
+
+        // ESC
+        if (
+            tecla ===
+            "escape"
+        ) {
+
+            if (
+                tela !==
+                "jogo"
+            ) {
+
+                tela =
+                    "menu";
+
+            }
+            else {
+
+                tela =
+                    "menu";
+
+                fim =
+                    false;
+
+                esperando =
+                    false;
+
+                jogador.dancando =
+                    false;
+
+            }
+
+        }
+
+    }
+);
+
+
+document.addEventListener(
+    "keyup",
+    e => {
+
+        teclas[
+            e.key.toLowerCase()
+        ] = false;
+
+    }
+);
+
+
+// ======================================================
+// SALVAR
+// ======================================================
+
+function salvar() {
+
+    localStorage.setItem(
+        "x1_moedas",
+        moedas
+    );
+
+    localStorage.setItem(
+        "x1_xp",
+        xp
+    );
+
+    localStorage.setItem(
+        "x1_nivel",
+        nivel
+    );
+
+    localStorage.setItem(
+        "x1_skin",
+        skinAtual
+    );
+
+    localStorage.setItem(
+        "x1_roupa",
+        roupaAtual
+    );
+
+    localStorage.setItem(
+        "x1_roupas",
+        JSON.stringify(
+            roupasCompradas
+        )
+    );
+
+    localStorage.setItem(
+        "x1_classe",
+        classeAtual
+    );
+
+}
+
+
+// ======================================================
+// MOEDAS
+// ======================================================
+
+function ganharMoedas(
+    valor
+) {
+
+    moedas +=
+        valor;
+
+    popup(
+        `+${valor} moedas`
+    );
+
+    salvar();
+
+}
+
+
+// ======================================================
+// XP
+// ======================================================
+
+function ganharXP(
+    valor
+) {
+
+    xp +=
+        valor;
+
+
+    while (
+        xp >=
+        nivel * 1000
+    ) {
+
+        xp -=
+            nivel * 1000;
+
+        nivel++;
+
+
+        popup(
+            `NÍVEL ${nivel}!`
+        );
+
+
+        beep(
+            800,
+            .15,
+            "sine",
+            .08
+        );
+
+    }
+
+
+    salvar();
+
+}
+
+
+// ======================================================
+// CLASSE
+// ======================================================
+
+function escolherClasse(
+    nome
+) {
+
+    classeAtual =
+        nome;
+
+    salvar();
+
+    popup(
+        `${classes[nome].nome} selecionado`
+    );
+
+}
+
+
+// ======================================================
+// CONFIGURAR JOGADOR
+// ======================================================
+
+function configurarJogador() {
+
+    const dados =
+        classes[
+            classeAtual
+        ];
+
+
+    // sempre 1000
+    jogador.vidaMax =
+        1000;
+
+    jogador.vida =
+        1000;
+
+
+    jogador.energiaMax =
+        dados.energia;
+
+    jogador.energia =
+        dados.energia;
+
+
+    jogador.ataque =
+        dados.ataque;
+
+    jogador.velocidade =
+        dados.velocidade;
+
+
+    jogador.x =
+        230;
+
+    jogador.y =
+        CHAO -
+        jogador.altura;
+
+
+    jogador.vx = 0;
+
+    jogador.vy = 0;
+
+    jogador.noAr =
+        false;
+
+    jogador.atacando =
+        false;
+
+    jogador.defendendo =
+        false;
+
+    jogador.agachado =
+        false;
+
+    jogador.dancando =
+        false;
+
+}
+
+
+// ======================================================
+// CRIAR INIMIGO
+// ======================================================
+
+function criarInimigo() {
+
+    const dados =
+        dadosAndares[
+            andar - 1
+        ];
+
+
+    inimigo.nome =
+        dados.nome;
+
+
+    inimigo.vidaMax =
+        dados.vida;
+
+
+    inimigo.vida =
+        dados.vida;
+
+
+    inimigo.ataque =
+        dados.ataque;
+
+
+    inimigo.velocidade =
+        dados.velocidade;
+
+
+    inimigo.boss =
+        dados.boss;
+
+
+    inimigo.x =
+        dados.boss
+            ? 830
+            : 850;
+
+
+    inimigo.y =
+        CHAO -
+        inimigo.altura;
+
+
+    inimigo.olhando =
+        -1;
+
+
+    inimigo.atacando =
+        false;
+
+
+    inimigo.ataqueTimer =
+        0;
+
+
+    inimigo.invulneravel =
+        0;
+
+
+    inimigo.contadorAtaque =
+        55 +
+        Math.random() * 100;
+
+
+    configurarJogador();
+
+}
+
+
+// ======================================================
+// JOGADOR
+// ======================================================
+
+function atualizarJogador() {
+
+    if (
+        tela !== "jogo" ||
+        fim
+    ) {
+
+        return;
+
+    }
+
+
+    // ==============================================
+    // DANÇA
+    // ==============================================
+
+    if (
+        jogador.dancando
+    ) {
+
+        jogador.dancaTimer--;
+
+
+        jogador.x =
+            560 +
+            Math.sin(
+                Date.now() *
+                .008
+            ) * 75;
+
+
+        jogador.y =
+            CHAO -
+            jogador.altura -
+            Math.abs(
+                Math.sin(
+                    Date.now() *
+                    .012
+                )
+            ) * 25;
+
+
+        if (
+            Math.random() < .18
+        ) {
+
+            criarParticulas(
+                jogador.x + 25,
+                jogador.y + 20,
+                skins[
+                    skinAtual
+                ].efeito,
+                3
+            );
+
+        }
+
+
+        if (
+            jogador.dancaTimer <= 0
+        ) {
+
+            jogador.dancando =
+                false;
+
+            fim =
+                true;
+
+        }
+
+
+        return;
+
+    }
+
+
+    if (
+        esperando
+    ) {
+
+        return;
+
+    }
+
+
+    jogador.vx =
+        0;
+
+
+    // ==============================================
+    // AGACHAR
+    // ==============================================
+
+    jogador.agachado =
+        !!teclas["s"] &&
+        !jogador.atacando;
+
+
+    // ==============================================
+    // DEFESA
+    // ==============================================
+
+    jogador.defendendo =
+        !!teclas["l"] &&
+        !jogador.atacando &&
+        !jogador.agachado;
+
+
+    // ==============================================
+    // MOVIMENTO
+    // ==============================================
+
+    if (
+        !jogador.defendendo
+    ) {
+
+        if (
+            teclas["a"]
+        ) {
+
+            jogador.vx =
+                -jogador.velocidade;
+
+            jogador.olhando =
+                -1;
+
+        }
+
+
+        if (
+            teclas["d"]
+        ) {
+
+            jogador.vx =
+                jogador.velocidade;
+
+            jogador.olhando =
+                1;
+
+        }
+
+    }
+
+
+    // ==============================================
+    // PULO
+    // ==============================================
+
+    if (
+        teclas["w"] &&
+        !jogador.noAr &&
+        !jogador.agachado &&
+        !jogador.defendendo
+    ) {
+
+        jogador.vy =
+            -14;
+
+        jogador.noAr =
+            true;
+
+
+        beep(
+            250,
+            .05,
+            "sine",
+            .03
+        );
+
+    }
+
+
+    // ==============================================
+    // DASH
+    // ==============================================
+
+    if (
+        teclas["shift"] &&
+        jogador.dashTimer <= 0 &&
+        !jogador.agachado &&
+        !jogador.defendendo
+    ) {
+
+        jogador.x +=
+            jogador.olhando *
+            80;
+
+
+        jogador.dashTimer =
+            40;
+
+
+        jogador.invulneravel =
+            12;
+
+
+        criarParticulas(
+            jogador.x,
+            jogador.y + 50,
+            skins[
+                skinAtual
+            ].efeito,
+            12
+        );
+
+
+        beep(
+            420,
+            .08,
+            "sawtooth",
+            .04
+        );
+
+
+        teclas["shift"] =
+            false;
+
+    }
+
+
+    if (
+        jogador.dashTimer > 0
+    ) {
+
+        jogador.dashTimer--;
+
+    }
+
+
+    // ==============================================
+    // ATAQUES
+    // ==============================================
+
+    if (
+        !jogador.atacando &&
+        !jogador.defendendo &&
+        !jogador.agachado
+    ) {
+
+        if (
+            teclas["j"]
+        ) {
+
+            iniciarAtaque(
+                "soco"
+            );
+
+        }
+
+        else if (
+            teclas["k"]
+        ) {
+
+            iniciarAtaque(
+                "chute"
+            );
+
+        }
+
+        else if (
+            teclas["e"] &&
+            jogador.energia >= 30
+        ) {
+
+            iniciarEspecial();
+
+            teclas["e"] =
+                false;
+
+        }
+
+    }
+
+
+    // ==============================================
+    // FÍSICA
+    // ==============================================
+
+    jogador.x +=
+        jogador.vx;
+
+
+    jogador.vy +=
+        .65;
+
+
+    jogador.y +=
+        jogador.vy;
+
+
+    if (
+        jogador.y >=
+        CHAO -
+        jogador.altura
+    ) {
+
+        jogador.y =
+            CHAO -
+            jogador.altura;
+
+        jogador.vy =
+            0;
+
+        jogador.noAr =
+            false;
+
+    }
+
+
+    jogador.x =
+        Math.max(
+            210,
+            Math.min(
+                950,
+                jogador.x
+            )
+        );
+
+
+    // energia recupera
+    if (
+        jogador.energia <
+        jogador.energiaMax
+    ) {
+
+        jogador.energia +=
+            .08;
+
+    }
+
+
+    // ==============================================
+    // ATAQUE TIMER
+    // ==============================================
+
+    if (
+        jogador.ataqueTimer > 0
+    ) {
+
+        jogador.ataqueTimer--;
+
+
+        if (
+            jogador.ataqueTimer === 10
+        ) {
+
+            verificarAtaque();
+
+        }
+
+    }
+    else {
+
+        jogador.atacando =
+            false;
+
+        jogador.tipoAtaque =
+            "";
+
+    }
+
+
+    if (
+        jogador.invulneravel > 0
+    ) {
+
+        jogador.invulneravel--;
+
+    }
+
+}
+
+
+// ======================================================
+// ATAQUE
+// ======================================================
+
+function iniciarAtaque(
+    tipo
+) {
+
+    jogador.atacando =
+        true;
+
+    jogador.tipoAtaque =
+        tipo;
+
+    jogador.ataqueTimer =
+        21;
+
+
+    beep(
+        tipo === "soco"
+            ? 180
+            : 130,
+        .06,
+        "square",
+        .04
+    );
+
+}
+
+
+function iniciarEspecial() {
+
+    jogador.energia -=
+        30;
+
+
+    jogador.atacando =
+        true;
+
+
+    jogador.tipoAtaque =
+        "especial";
+
+
+    jogador.ataqueTimer =
+        30;
+
+
+    criarParticulas(
+        jogador.x + 25,
+        jogador.y + 35,
+        skins[
+            skinAtual
+        ].efeito,
+        25
+    );
+
+
+    beep(
+        600,
+        .18,
+        "sine",
+        .08
+    );
+
+}
+
+
+// ======================================================
+// ATAQUE DO JOGADOR
+// ======================================================
+
+function verificarAtaque() {
+
+    const distancia =
+        Math.abs(
+            (
+                jogador.x + 26
+            ) -
+            (
+                inimigo.x + 26
+            )
+        );
+
+
+    let alcance =
+        80;
+
+
+    let dano =
+        jogador.ataque;
+
+
+    if (
+        jogador.tipoAtaque ===
+        "chute"
+    ) {
+
+        alcance =
+            105;
+
+        dano +=
+            7;
+
+    }
+
+
+    if (
+        jogador.tipoAtaque ===
+        "especial"
+    ) {
+
+        alcance =
+            160;
+
+        dano +=
+            35;
+
+    }
+
+
+    dano +=
+        Math.floor(
+            combo *
+            .8
+        );
+
+
+    if (
+        distancia >
+        alcance
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        inimigo.invulneravel >
+        0
+    ) {
+
+        return;
+
+    }
+
+
+    inimigo.vida -=
+        dano;
+
+
+    inimigo.invulneravel =
+        10;
+
+
+    inimigo.x +=
+        jogador.olhando *
+        (
+            inimigo.boss
+                ? 8
+                : 24
+        );
+
+
+    combo++;
+
+
+    maiorCombo =
+        Math.max(
+            maiorCombo,
+            combo
+        );
+
+
+    pontos +=
+        dano * 5;
+
+
+    criarParticulas(
+        inimigo.x + 25,
+        inimigo.y + 35,
+        skins[
+            skinAtual
+        ].efeito,
+        jogador.tipoAtaque ===
+            "especial"
+            ? 25
+            : 10
+    );
+
+
+    beep(
+        jogador.tipoAtaque ===
+            "especial"
+            ? 90
+            : 70,
+        .1,
+        "triangle",
+        .06
+    );
+
+
+    if (
+        combo >= 5
+    ) {
+
+        ganharMoedas(2);
+
+    }
+
+
+    if (
+        inimigo.vida <= 0
+    ) {
+
+        inimigo.vida =
+            0;
+
+        vencerAndar();
+
+    }
+
+}
+
+
+// ======================================================
+// IA
+// ======================================================
+
+function atualizarInimigo() {
+
+    if (
+        tela !== "jogo" ||
+        fim ||
+        esperando
+    ) {
+
+        return;
+
+    }
+
+
+    const dx =
+        (
+            jogador.x +
+            26
+        ) -
+        (
+            inimigo.x +
+            26
+        );
+
+
+    inimigo.olhando =
+        dx >= 0
+            ? 1
+            : -1;
+
+
+    const distancia =
+        Math.abs(
+            dx
+        );
+
+
+    if (
+        distancia >
+        (
+            inimigo.boss
+                ? 110
+                : 85
+        )
+    ) {
+
+        inimigo.x +=
+            inimigo.olhando *
+            inimigo.velocidade;
+
+    }
+
+
+    if (
+        inimigo.contadorAtaque >
+        0
+    ) {
+
+        inimigo.contadorAtaque--;
+
+    }
+
+
+    if (
+        distancia <=
+        (
+            inimigo.boss
+                ? 130
+                : 90
+        ) &&
+        inimigo.contadorAtaque <=
+        0 &&
+        !inimigo.atacando
+    ) {
+
+        inimigo.atacando =
+            true;
+
+        inimigo.ataqueTimer =
+            25;
+
+
+        inimigo.contadorAtaque =
+            inimigo.boss
+                ? 40 +
+                  Math.random() * 50
+                : 55 +
+                  Math.random() * 80;
+
+
+        if (
+            inimigo.boss
+        ) {
+
+            criarParticulas(
+                inimigo.x + 25,
+                inimigo.y + 75,
+                "#ffd45a",
+                12
+            );
+
+            beep(
+                100,
+                .1,
+                "square",
+                .05
+            );
+
+        }
+
+    }
+
+
+    if (
+        inimigo.atacando
+    ) {
+
+        inimigo.ataqueTimer--;
+
+
+        if (
+            inimigo.ataqueTimer ===
+            11
+        ) {
+
+            ataqueInimigo();
+
+        }
+
+
+        if (
+            inimigo.ataqueTimer <= 0
+        ) {
+
+            inimigo.atacando =
+                false;
+
+        }
+
+    }
+
+
+    if (
+        inimigo.invulneravel >
+        0
+    ) {
+
+        inimigo.invulneravel--;
+
+    }
+
+
+    inimigo.x =
+        Math.max(
+            210,
+            Math.min(
+                970,
+                inimigo.x
+            )
+        );
+
+}
+
+
+// ======================================================
+// ATAQUE INIMIGO
+// ======================================================
+
+function ataqueInimigo() {
+
+    const distancia =
+        Math.abs(
+            (
+                jogador.x + 26
+            ) -
+            (
+                inimigo.x + 26
+            )
+        );
+
+
+    const alcance =
+        inimigo.boss
+            ? 135
+            : 90;
+
+
+    if (
+        distancia >
+        alcance
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        jogador.invulneravel >
+        0
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        jogador.defendendo ||
+        jogador.agachado
+    ) {
+
+        criarParticulas(
+            jogador.x + 25,
+            jogador.y + 35,
+            "#ffffff",
+            8
+        );
+
+
+        beep(
+            330,
+            .08,
+            "square",
+            .06
+        );
+
+
+        return;
+
+    }
+
+
+    const dano =
+        inimigo.ataque;
+
+
+    jogador.vida -=
+        dano;
+
+
+    jogador.invulneravel =
+        20;
+
+
+    combo =
+        0;
+
+
+    jogador.x -=
+        inimigo.olhando *
+        20;
+
+
+    criarParticulas(
+        jogador.x + 25,
+        jogador.y + 35,
+        "#ff7777",
+        10
+    );
+
+
+    beep(
+        55,
+        .12,
+        "triangle",
+        .08
+    );
+
+
+    if (
+        jogador.vida <= 0
+    ) {
+
+        jogador.vida =
+            0;
+
+        fim =
+            true;
+
+    }
+
+}
+
+
+// ======================================================
+// CURA
+// ======================================================
+
+const cura = {
+
+    ativa:
+        false,
+
+    x:
+        0,
+
+    y:
+        CHAO - 30,
+
+    tamanho:
+        24,
+
+    contador:
+        600
+};
+
+
+function atualizarCura() {
+
+    if (
+        tela !== "jogo" ||
+        fim
+    ) {
+
+        return;
+
+    }
+
+
+    if (
+        !cura.ativa
+    ) {
+
+        cura.contador--;
+
+
+        if (
+            cura.contador <= 0
+        ) {
+
+            criarCura();
+
+        }
+
+
+        return;
+
+    }
+
+
+    cura.y =
+        CHAO -
+        30 +
+        Math.sin(
+            Date.now() *
+            .006
+        ) * 5;
+
+
+    const distanciaX =
+        Math.abs(
+            (
+                jogador.x + 26
+            ) -
+            cura.x
+        );
+
+
+    const distanciaY =
+        Math.abs(
+            (
+                jogador.y + 45
+            ) -
+            cura.y
+        );
+
+
+    if (
+        distanciaX < 48 &&
+        distanciaY < 70
+    ) {
+
+        if (
+            jogador.vida <
+            jogador.vidaMax
+        ) {
+
+            const antes =
+                jogador.vida;
+
+
+            jogador.vida =
+                Math.min(
+                    jogador.vidaMax,
+                    jogador.vida +
+                    250
+                );
+
+
+            const recuperado =
+                jogador.vida -
+                antes;
+
+
+            popup(
+                `+${recuperado} HP`
+            );
+
+
+            criarParticulas(
+                cura.x,
+                cura.y,
+                "#49ff70",
+                30
+            );
+
+
+            beep(
+                700,
+                .15,
+                "sine",
+                .08
+            );
+
+
+            cura.ativa =
+                false;
+
+
+            cura.contador =
+                600;
+
+        }
+
+    }
+
+}
+
+
+function criarCura() {
+
+    cura.ativa =
+        true;
+
+
+    cura.x =
+        300 +
+        Math.random() *
+        580;
+
+
+    cura.y =
+        CHAO - 30;
+
+}
+
+
+function desenharCura() {
+
+    if (
+        !cura.ativa
+    ) {
+
+        return;
+
+    }
+
+
+    const tamanho =
+        cura.tamanho +
+        Math.sin(
+            Date.now() *
+            .008
+        ) * 4;
+
+
+    // brilho
+    ctx.globalAlpha =
+        .18;
+
+
+    ctx.beginPath();
+
+    ctx.arc(
+        cura.x,
+        cura.y,
+        tamanho + 15,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "#35ff68";
+
+    ctx.fill();
+
+
+    ctx.globalAlpha =
+        1;
+
+
+    // círculo
+    ctx.beginPath();
+
+    ctx.arc(
+        cura.x,
+        cura.y,
+        tamanho,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "#27ca50";
+
+    ctx.fill();
+
+
+    ctx.strokeStyle =
+        "#dbffe3";
+
+    ctx.lineWidth =
+        3;
+
+    ctx.stroke();
+
+
+    // cruz
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.fillRect(
+        cura.x - 5,
+        cura.y - 14,
+        10,
+        28
+    );
+
+
+    ctx.fillRect(
+        cura.x - 14,
+        cura.y - 5,
+        28,
+        10
+    );
+
+
+    ctx.fillStyle =
+        "#8dff9e";
+
+    ctx.font =
+        "bold 14px Arial";
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillText(
+        "CURA",
+        cura.x,
+        cura.y - 38
+    );
+
+}
+
+
+// ======================================================
+// VENCER ANDAR
+// ======================================================
+
+function vencerAndar() {
+
+    esperando =
+        true;
+
+
+    const recompensa =
+        150 +
+        andar * 80;
+
+
+    ganharMoedas(
+        recompensa
+    );
+
+
+    ganharXP(
+        500 +
+        andar * 100
+    );
+
+
+    pontos +=
+        600;
+
+
+    // BOSS FINAL
+    if (
+        andar >=
+        dadosAndares.length
+    ) {
+
+        // inicia dança
+        esperando =
+            false;
+
+
+        jogador.dancando =
+            true;
+
+
+        jogador.dancaTimer =
+            360;
+
+
+        criarParticulas(
+            jogador.x + 25,
+            jogador.y + 40,
+            "#ffd94a",
+            70
+        );
+
+
+        // fanfarra
+        setTimeout(
+            () => {
+                beep(
+                    600,
+                    .15,
+                    "sine",
+                    .08
+                );
+            },
+            100
+        );
+
+
+        setTimeout(
+            () => {
+                beep(
+                    800,
+                    .15,
+                    "sine",
+                    .08
+                );
+            },
+            350
+        );
+
+
+        setTimeout(
+            () => {
+                beep(
+                    1000,
+                    .25,
+                    "sine",
+                    .08
+                );
+            },
+            600
+        );
+
+
+        return;
+
+    }
+
+
+    // próximo andar
+    setTimeout(
+        () => {
+
+            andar++;
+
+            combo =
+                0;
+
+
+            jogador.vida =
+                Math.min(
+                    jogador.vidaMax,
+                    jogador.vida +
+                    200
+                );
+
+
+            jogador.energia =
+                Math.min(
+                    jogador.energiaMax,
+                    jogador.energia +
+                    40
+                );
+
+
+            criarInimigo();
+
+
+            esperando =
+                false;
+
+        },
+        1800
+    );
+
+}
+
+
+// ======================================================
+// FUNDO
+// ======================================================
+
+function desenharFundo() {
+
+    const grad =
+        ctx.createLinearGradient(
+            0,
+            0,
+            0,
+            H
+        );
+
+
+    grad.addColorStop(
+        0,
+        "#181818"
+    );
+
+
+    grad.addColorStop(
+        1,
+        "#040404"
+    );
+
+
+    ctx.fillStyle =
+        grad;
+
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    // lua
+    ctx.beginPath();
+
+
+    ctx.arc(
+        1000,
+        100,
+        55,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "#dedede";
+
+
+    ctx.fill();
+
+
+    // montanhas
+    ctx.fillStyle =
+        "#101010";
+
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        0,
+        440
+    );
+
+
+    for (
+        let x = 0;
+        x <= W;
+        x += 100
+    ) {
+
+        ctx.lineTo(
+            x,
+            370 +
+            Math.sin(
+                x * .025
+            ) *
+            60
+        );
+
+    }
+
+
+    ctx.lineTo(
+        W,
+        H
+    );
+
+
+    ctx.lineTo(
+        0,
+        H
+    );
+
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    // torre ao fundo
+    ctx.fillStyle =
+        "#0c0c0c";
+
+
+    ctx.fillRect(
+        55,
+        170,
+        180,
+        405
+    );
+
+
+    for (
+        let y = 185;
+        y < 550;
+        y += 48
+    ) {
+
+        ctx.fillStyle =
+            "#232323";
+
+
+        ctx.fillRect(
+            40,
+            y,
+            210,
+            18
+        );
+
+    }
+
+
+    for (
+        let y = 210;
+        y < 530;
+        y += 75
+    ) {
+
+        ctx.fillStyle =
+            "#634a1b";
+
+
+        ctx.fillRect(
+            115,
+            y,
+            35,
+            30
+        );
+
+    }
+
+
+    // chão
+    ctx.fillStyle =
+        "#181818";
+
+
+    ctx.fillRect(
+        0,
+        CHAO,
+        W,
+        H -
+        CHAO
+    );
+
+
+    // piso
+    ctx.strokeStyle =
+        "#2b2b2b";
+
+
+    ctx.lineWidth = 2;
+
+
+    for (
+        let x = 0;
+        x < W;
+        x += 60
+    ) {
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+            x,
+            CHAO
+        );
+
+
+        ctx.lineTo(
+            x - 80,
+            H
+        );
+
+
+        ctx.stroke();
+
+    }
+
+
+    // plataformas
+    desenharPlataforma(
+        390,
+        450,
+        180,
+        18
+    );
+
+
+    desenharPlataforma(
+        650,
+        395,
+        180,
+        18
+    );
+
+}
+
+
+function desenharPlataforma(
+    x,
+    y,
+    largura,
+    altura
+) {
+
+    ctx.fillStyle =
+        "#303030";
+
+
+    ctx.fillRect(
+        x,
+        y,
+        largura,
+        altura
+    );
+
+
+    ctx.strokeStyle =
+        "#656565";
+
+
+    ctx.lineWidth =
+        2;
+
+
+    ctx.strokeRect(
+        x,
+        y,
+        largura,
+        altura
+    );
+
+}
+
+
+// ======================================================
+// PERSONAGEM
+// ======================================================
+
+function desenharPersonagem(
+    p,
+    ehJogador
+) {
+
+    // Boss
+    if (
+        !ehJogador &&
+        inimigo.boss
+    ) {
+
+        desenharJVGamero(
+            p
+        );
+
+        return;
+
+    }
+
+
+    const skin =
+        skins[
+            ehJogador
+                ? skinAtual
+                : "vermelho"
+        ];
+
+
+    const roupa =
+        ehJogador
+            ? roupas[
+                roupaAtual
+            ]
+            : {
+                cor:
+                    "#a8343c",
+
+                acessorio:
+                    "nenhum"
+            };
+
+
+    const x =
+        p.x +
+        p.largura / 2;
+
+
+    const agachado =
+        ehJogador &&
+        p.agachado;
+
+
+    ctx.beginPath();
+
+
+    ctx.ellipse(
+        x,
+        CHAO + 5,
+        40,
+        11,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.65)";
+
+
+    ctx.fill();
+
+
+    if (
+        p.invulneravel >
+        0 &&
+        Math.floor(
+            p.invulneravel / 3
+        ) % 2 === 0
+    ) {
+
+        return;
+
+    }
+
+
+    // corpo
+    const corpoY =
+        agachado
+            ? p.y + 40
+            : p.y + 23;
+
+
+    const corpoAltura =
+        agachado
+            ? 28
+            : 46;
+
+
+    // pernas
+    ctx.strokeStyle =
+        roupa.cor ||
+        skin.corpo;
+
+
+    ctx.lineWidth =
+        agachado
+            ? 13
+            : 14;
+
+
+    ctx.lineCap =
+        "round";
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+        x - 11,
+        corpoY + corpoAltura
+    );
+
+
+    ctx.lineTo(
+        x - 20,
+        corpoY +
+        corpoAltura +
+        25
+    );
+
+
+    ctx.moveTo(
+        x + 11,
+        corpoY + corpoAltura
+    );
+
+
+    ctx.lineTo(
+        x + 20,
+        corpoY +
+        corpoAltura +
+        25
+    );
+
+
+    ctx.stroke();
+
+
+    // corpo
+    ctx.fillStyle =
+        roupa.cor ||
+        skin.corpo;
+
+
+    ctx.fillRect(
+        x - 21,
+        corpoY,
+        42,
+        corpoAltura
+    );
+
+
+    // detalhe da roupa
+    ctx.fillStyle =
+        skin.detalhe;
+
+
+    ctx.fillRect(
+        x - 21,
+        corpoY + 30,
+        42,
+        8
+    );
+
+
+    // cabeça
+    ctx.beginPath();
+
+
+    ctx.arc(
+        x,
+        p.y + 8,
+        24,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "#c8916a";
+
+
+    ctx.fill();
+
+
+    // cabelo
+    ctx.beginPath();
+
+
+    ctx.arc(
+        x,
+        p.y + 3,
+        24,
+        Math.PI,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "#1c1c1c";
+
+
+    ctx.fill();
+
+
+    // olhos
+    ctx.fillStyle =
+        "#111";
+
+
+    ctx.fillRect(
+        x - 10,
+        p.y + 7,
+        5,
+        4
+    );
+
+
+    ctx.fillRect(
+        x + 5,
+        p.y + 7,
+        5,
+        4
+    );
+
+
+    // acessórios
+    desenharAcessorio(
+        x,
+        p.y,
+        roupa.acessorio
+    );
+
+
+    // braços
+    ctx.strokeStyle =
+        roupa.cor ||
+        skin.corpo;
+
+
+    ctx.lineWidth =
+        13;
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+        x - 18,
+        corpoY + 10
+    );
+
+
+    ctx.lineTo(
+        x -
+        38 *
+        p.olhando,
+        corpoY + 33
+    );
+
+
+    ctx.stroke();
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+        x + 18,
+        corpoY + 10
+    );
+
+
+    if (
+        p.atacando
+    ) {
+
+        ctx.lineTo(
+            x +
+            58 *
+            p.olhando,
+            corpoY + 10
+        );
+
+    }
+    else {
+
+        ctx.lineTo(
+            x +
+            35 *
+            p.olhando,
+            corpoY + 33
+        );
+
+    }
+
+
+    ctx.stroke();
+
+
+    // defesa
+    if (
+        ehJogador &&
+        p.defendendo
+    ) {
+
+        ctx.strokeStyle =
+            skin.efeito;
+
+
+        ctx.lineWidth =
+            5;
+
+
+        ctx.beginPath();
+
+
+        ctx.arc(
+            x,
+            corpoY + 30,
+            62,
+            -1.1,
+            1.1
+        );
+
+
+        ctx.stroke();
+
+    }
+
+
+    // ataque
+    if (
+        p.atacando
+    ) {
+
+        ctx.strokeStyle =
+            skin.efeito;
+
+
+        ctx.lineWidth =
+            4;
+
+
+        ctx.beginPath();
+
+
+        ctx.arc(
+            x +
+            45 *
+            p.olhando,
+            corpoY + 15,
+            25,
+            -1,
+            1
+        );
+
+
+        ctx.stroke();
+
+    }
+
+
+    // dança
+    if (
+        ehJogador &&
+        p.dancando
+    ) {
+
+        const movimento =
+            Math.sin(
+                Date.now() *
+                .01
+            );
+
+
+        ctx.strokeStyle =
+            skin.efeito;
+
+
+        ctx.lineWidth =
+            10;
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+            x - 15,
+            corpoY + 25
+        );
+
+
+        ctx.lineTo(
+            x - 50,
+            corpoY +
+            15 +
+            movimento *
+            15
+        );
+
+
+        ctx.moveTo(
+            x + 15,
+            corpoY + 25
+        );
+
+
+        ctx.lineTo(
+            x + 50,
+            corpoY -
+            movimento *
+            15
+        );
+
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+// ======================================================
+// ACESSÓRIOS
+// ======================================================
+
+function desenharAcessorio(
+    x,
+    y,
+    acessorio
+) {
+
+    if (
+        acessorio ===
+        "faixa"
+    ) {
+
+        ctx.fillStyle =
+            "#df3f49";
+
+
+        ctx.fillRect(
+            x - 25,
+            y,
+            50,
+            8
+        );
+
+    }
+
+
+    if (
+        acessorio ===
+        "samurai"
+    ) {
+
+        ctx.strokeStyle =
+            "#aaa";
+
+
+        ctx.lineWidth =
+            5;
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+            x - 28,
+            y - 9
+        );
+
+
+        ctx.lineTo(
+            x + 28,
+            y - 9
+        );
+
+
+        ctx.stroke();
+
+    }
+
+
+    if (
+        acessorio ===
+        "coroa"
+    ) {
+
+        ctx.fillStyle =
+            "#efca43";
+
+
+        ctx.beginPath();
+
+
+        ctx.moveTo(
+            x - 20,
+            y - 15
+        );
+
+
+        ctx.lineTo(
+            x - 12,
+            y - 31
+        );
+
+
+        ctx.lineTo(
+            x - 3,
+            y - 18
+        );
+
+
+        ctx.lineTo(
+            x + 6,
+            y - 31
+        );
+
+
+        ctx.lineTo(
+            x + 18,
+            y - 15
+        );
+
+
+        ctx.closePath();
+
+
+        ctx.fill();
+
+    }
+
+
+    if (
+        acessorio ===
+        "visor"
+    ) {
+
+        ctx.fillStyle =
+            "#59efe4";
+
+
+        ctx.fillRect(
+            x - 22,
+            y - 1,
+            44,
+            10
+        );
+
+    }
+
+
+    if (
+        acessorio ===
+        "manto"
+    ) {
+
+        ctx.fillStyle =
+            "#b99845";
+
+
+        ctx.fillRect(
+            x - 30,
+            y + 20,
+            8,
+            60
+        );
+
+
+        ctx.fillRect(
+            x + 22,
+            y + 20,
+            8,
+            60
+        );
+
+    }
+
+}
+
+
+// ======================================================
+// JV GAMERO
+// ======================================================
+
+function desenharJVGamero(
+    p
+) {
+
+    const x =
+        p.x +
+        p.largura / 2;
+
+
+    const y =
+        p.y;
+
+
+    // sombra
+    ctx.beginPath();
+
+
+    ctx.ellipse(
+        x,
+        CHAO + 5,
+        72,
+        15,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.75)";
+
+
+    ctx.fill();
+
+
+    if (
+        p.invulneravel >
+        0 &&
+        Math.floor(
+            p.invulneravel / 3
+        ) % 2 === 0
+    ) {
+
+        return;
+
+    }
+
+
+    // pernas grossas
+    ctx.strokeStyle =
+        "#754923";
+
+
+    ctx.lineWidth =
+        25;
+
+
+    ctx.lineCap =
+        "round";
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+        x - 30,
+        y + 72
+    );
+
+
+    ctx.lineTo(
+        x - 40,
+        y + 98
+    );
+
+
+    ctx.moveTo(
+        x + 30,
+        y + 72
+    );
+
+
+    ctx.lineTo(
+        x + 40,
+        y + 98
+    );
+
+
+    ctx.stroke();
+
+
+    // corpo grande
+    ctx.beginPath();
+
+
+    ctx.ellipse(
+        x,
+        y + 48,
+        68,
+        62,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "#7e4e27";
+
+
+    ctx.fill();
+
+
+    // faixa de sumô
+    ctx.fillStyle =
+        "#dfc675";
+
+
+    ctx.fillRect(
+        x - 52,
+        y + 58,
+        104,
+        20
+    );
+
+
+    // cabeça
+    ctx.beginPath();
+
+
+    ctx.arc(
+        x,
+        y - 3,
+        30,
+        0,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "#ca936b";
+
+
+    ctx.fill();
+
+
+    // cabelo
+    ctx.beginPath();
+
+
+    ctx.arc(
+        x,
+        y - 12,
+        29,
+        Math.PI,
+        Math.PI * 2
+    );
+
+
+    ctx.fillStyle =
+        "#161616";
+
+
+    ctx.fill();
+
+
+    // olhos
+    ctx.fillStyle =
+        "#111";
+
+
+    ctx.fillRect(
+        x - 11,
+        y - 2,
+        6,
+        4
+    );
+
+
+    ctx.fillRect(
+        x + 5,
+        y - 2,
+        6,
+        4
+    );
+
+
+    // braços
+    ctx.strokeStyle =
+        "#754923";
+
+
+    ctx.lineWidth =
+        24;
+
+
+    ctx.beginPath();
+
+
+    ctx.moveTo(
+        x - 46,
+        y + 34
+    );
+
+
+    ctx.lineTo(
+        x - 80,
+        y + 54
+    );
+
+
+    ctx.moveTo(
+        x + 46,
+        y + 34
+    );
+
+
+    ctx.lineTo(
+        x + 80,
+        y + 54
+    );
+
+
+    ctx.stroke();
+
+
+    // ataque do boss
+    if (
+        p.atacando
+    ) {
+
+        ctx.strokeStyle =
+            "#ffd75c";
+
+
+        ctx.lineWidth =
+            6;
+
+
+        ctx.beginPath();
+
+
+        ctx.arc(
+            x +
+            78 *
+            p.olhando,
+            y + 52,
+            28,
+            -1,
+            1
+        );
+
+
+        ctx.stroke();
+
+    }
+
+
+    // nome
+    ctx.fillStyle =
+        "#ffd95a";
+
+
+    ctx.font =
+        "bold 20px Arial";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillText(
+        "JV GAMERO",
+        x,
+        y - 55
+    );
+
+}
+
+
+// ======================================================
+// BARRAS
+// ======================================================
+
+function desenharBarra(
+    x,
+    y,
+    largura,
+    altura,
+    valor,
+    maximo,
+    nome,
+    especial = false
+) {
+
+    const pct =
+        Math.max(
+            0,
+            valor /
+            maximo
+        );
+
+
+    ctx.fillStyle =
+        "#111";
+
+
+    ctx.fillRect(
+        x,
+        y,
+        largura,
+        altura
+    );
+
+
+    ctx.fillStyle =
+        especial
+            ? "#35d9cf"
+            : (
+                pct >
+                .5
+                    ? "#38cc63"
+                    : pct >
+                      .25
+                        ? "#dcb634"
+                        : "#e24b4b"
+            );
+
+
+    ctx.fillRect(
+        x,
+        y,
+        largura *
+        pct,
+        altura
+    );
+
+
+    ctx.strokeStyle =
+        "#ddd";
+
+
+    ctx.lineWidth =
+        2;
+
+
+    ctx.strokeRect(
+        x,
+        y,
+        largura,
+        altura
+    );
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 17px Arial";
+
+
+    ctx.textAlign =
+        "left";
+
+
+    ctx.fillText(
+        nome,
+        x,
+        y - 9
+    );
+
+
+    ctx.font =
+        "13px Arial";
+
+
+    ctx.fillText(
+        `${Math.ceil(valor)} / ${maximo}`,
+        x,
+        y +
+        altura +
+        18
+    );
+
+}
+
+
+// ======================================================
+// HUD
+// ======================================================
+
+function desenharHUD() {
+
+    desenharBarra(
+        260,
+        38,
+        300,
+        22,
+        jogador.vida,
+        jogador.vidaMax,
+        "VOCÊ"
+    );
+
+
+    desenharBarra(
+        640,
+        38,
+        300,
+        22,
+        inimigo.vida,
+        inimigo.vidaMax,
+        inimigo.nome
+    );
+
+
+    desenharBarra(
+        260,
+        92,
+        680,
+        12,
+        jogador.energia,
+        jogador.energiaMax,
+        "ENERGIA",
+        true
+    );
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 24px Arial";
+
+
+    ctx.fillText(
+        `ANDAR ${andar}`,
+        W / 2,
+        145
+    );
+
+
+    ctx.fillStyle =
+        "#aaa";
+
+
+    ctx.font =
+        "14px Arial";
+
+
+    ctx.fillText(
+        `${classes[classeAtual].nome} • ${roupas[roupaAtual].nome}`,
+        W / 2,
+        167
+    );
+
+
+    if (
+        combo >= 2
+    ) {
+
+        ctx.fillStyle =
+            "#ffd950";
+
+
+        ctx.font =
+            "bold 30px Arial";
+
+
+        ctx.fillText(
+            `${combo} COMBO`,
+            W / 2,
+            210
+        );
+
+    }
+
+
+    ctx.textAlign =
+        "right";
+
+
+    ctx.fillStyle =
+        "#f1cc52";
+
+
+    ctx.font =
+        "bold 17px Arial";
+
+
+    ctx.fillText(
+        `🪙 ${moedas}`,
+        1150,
+        45
+    );
+
+
+    ctx.fillStyle =
+        "#aaa";
+
+
+    ctx.font =
+        "14px Arial";
+
+
+    ctx.fillText(
+        `Nível ${nivel}`,
+        1150,
+        68
+    );
+
+
+    desenharMiniTorre();
+
+}
+
+
+// ======================================================
+// MINI TORRE
+// ======================================================
+
+function desenharMiniTorre() {
+
+    const x =
+        1030;
+
+    const y =
+        155;
+
+
+    ctx.fillStyle =
+        "#101010";
+
+
+    ctx.fillRect(
+        x,
+        y,
+        110,
+        395
+    );
+
+
+    for (
+        let i = 1;
+        i <=
+        dadosAndares.length;
+        i++
+    ) {
+
+        const py =
+            y +
+            350 -
+            (
+                i - 1
+            ) *
+            44;
+
+
+        let cor =
+            "#3d3d3d";
+
+
+        if (
+            i <
+            andar
+        ) {
+
+            cor =
+                "#3c81ff";
+
+        }
+
+
+        if (
+            i ===
+            andar
+        ) {
+
+            cor =
+                "#e5c64a";
+
+        }
+
+
+        ctx.fillStyle =
+            cor;
+
+
+        ctx.fillRect(
+            x - 8,
+            py,
+            126,
+            18
+        );
+
+
+        ctx.fillStyle =
+            "#fff";
+
+
+        ctx.font =
+            "bold 11px Arial";
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            `A${i}`,
+            x + 55,
+            py + 13
+        );
+
+    }
+
+}
+
+
+// ======================================================
+// JOGO
+// ======================================================
+
+function desenharJogo() {
+
+    desenharFundo();
+
+    desenharCura();
+
+    desenharPersonagem(
+        jogador,
+        true
+    );
+
+    desenharPersonagem(
+        inimigo,
+        false
+    );
+
+    desenharParticulas();
+
+    desenharHUD();
+
+
+    // Vitória / dança
+    if (
+        jogador.dancando
+    ) {
+
+        ctx.fillStyle =
+            "rgba(0,0,0,.45)";
+
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillStyle =
+            "#ffd94c";
+
+
+        ctx.font =
+            "bold 48px Arial";
+
+
+        ctx.fillText(
+            "🏆 TORRE CONCLUÍDA! 🏆",
+            W / 2,
+            270
+        );
+
+
+        ctx.fillStyle =
+            "#fff";
+
+
+        ctx.font =
+            "bold 23px Arial";
+
+
+        ctx.fillText(
+            "JV GAMERO FOI DERROTADO!",
+            W / 2,
+            310
+        );
+
+
+        ctx.fillStyle =
+            "#aaa";
+
+
+        ctx.font =
+            "18px Arial";
+
+
+        ctx.fillText(
+            "COMEMORE!",
+            W / 2,
+            345
+        );
+
+    }
+
+
+    // próximo andar
+    if (
+        esperando
+    ) {
+
+        ctx.fillStyle =
+            "rgba(0,0,0,.65)";
+
+
+        ctx.fillRect(
+            0,
+            0,
+            W,
+            H
+        );
+
+
+        ctx.fillStyle =
+            "#ffd84b";
+
+
+        ctx.font =
+            "bold 46px Arial";
+
+
+        ctx.textAlign =
+            "center";
+
+
+        ctx.fillText(
+            "ANDAR CONQUISTADO!",
+            W / 2,
+            300
+        );
+
+
+        ctx.fillStyle =
+            "#fff";
+
+
+        ctx.font =
+            "21px Arial";
+
+
+        ctx.fillText(
+            "Preparando próximo combate...",
+            W / 2,
+            340
+        );
+
+    }
+
+
+    if (
+        fim &&
+        !jogador.dancando
+    ) {
+
+        telaFinal();
+
+    }
+
+}
+
+
+// ======================================================
+// TELA FINAL
+// ======================================================
+
+function telaFinal() {
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.82)";
+
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    ctx.textAlign =
+        "center";
+
+
+    if (
+        jogador.vida <=
+        0
+    ) {
+
+        ctx.fillStyle =
+            "#ff5656";
+
+
+        ctx.font =
+            "bold 72px Arial";
+
+
+        ctx.fillText(
+            "DERROTA",
+            W / 2,
+            260
+        );
+
+
+        ctx.fillStyle =
+            "#fff";
+
+
+        ctx.font =
+            "23px Arial";
+
+
+        ctx.fillText(
+            `Você chegou ao andar ${andar}`,
+            W / 2,
+            305
+        );
+
+    }
+    else {
+
+        ctx.fillStyle =
+            "#ffd74f";
+
+
+        ctx.font =
+            "bold 60px Arial";
+
+
+        ctx.fillText(
+            "CAMPEÃO DA TORRE!",
+            W / 2,
+            235
+        );
+
+
+        ctx.fillStyle =
+            "#fff";
+
+
+        ctx.font =
+            "23px Arial";
+
+
+        ctx.fillText(
+            "Você derrotou JV GAMERO!",
+            W / 2,
+            280
+        );
+
+
+        ctx.fillText(
+            `Pontuação: ${pontos}`,
+            W / 2,
+            320
+        );
+
+
+        ctx.fillText(
+            `Maior combo: ${maiorCombo}`,
+            W / 2,
+            355
+        );
+
+    }
+
+
+    ctx.fillStyle =
+        "#aaa";
+
+
+    ctx.font =
+        "18px Arial";
+
+
+    ctx.fillText(
+        "Pressione ENTER para voltar ao menu",
+        W / 2,
+        425
+    );
+
+}
+
+
+// ======================================================
+// MENU
+// ======================================================
+
+function desenharMenu() {
+
+    desenharFundo();
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 65px Arial";
+
+
+    ctx.fillText(
+        "TORRE X1",
+        W / 2,
+        145
+    );
+
+
+    ctx.fillStyle =
+        "#aaa";
+
+
+    ctx.font =
+        "20px Arial";
+
+
+    ctx.fillText(
+        "Conquiste todos os andares",
+        W / 2,
+        185
+    );
+
+
+    botao(
+        410,
+        240,
+        380,
+        62,
+        "JOGAR TORRE",
+        "#2e7fff"
+    );
+
+
+    botao(
+        410,
+        315,
+        380,
+        62,
+        "LOJA DE ROUPAS",
+        "#7b4be5"
+    );
+
+
+    botao(
+        410,
+        390,
+        380,
+        62,
+        "PERSONAGEM",
+        "#bd9633"
+    );
+
+
+    botao(
+        410,
+        465,
+        380,
+        62,
+        "INVENTÁRIO",
+        "#3d3d3d"
+    );
+
+
+    ctx.fillStyle =
+        "#efcf54";
+
+
+    ctx.font =
+        "bold 20px Arial";
+
+
+    ctx.fillText(
+        `🪙 ${moedas}`,
+        W / 2,
+        590
+    );
+
+
+    ctx.fillStyle =
+        "#999";
+
+
+    ctx.font =
+        "15px Arial";
+
+
+    ctx.fillText(
+        `Nível ${nivel} • XP ${xp}/${nivel * 1000}`,
+        W / 2,
+        620
+    );
+
+}
+
+
+function botao(
+    x,
+    y,
+    w,
+    h,
+    texto,
+    cor
+) {
+
+    ctx.fillStyle =
+        cor;
+
+
+    ctx.fillRect(
+        x,
+        y,
+        w,
+        h
+    );
+
+
+    ctx.strokeStyle =
+        "#fff";
+
+
+    ctx.lineWidth =
+        2;
+
+
+    ctx.strokeRect(
+        x,
+        y,
+        w,
+        h
+    );
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 20px Arial";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillText(
+        texto,
+        x + w / 2,
+        y + h / 2 + 7
+    );
+
+}
+
+
+// ======================================================
+// LOJA
+// ======================================================
+
+function desenharLoja() {
+
+    desenharFundo();
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 42px Arial";
+
+
+    ctx.fillText(
+        "LOJA DE ROUPAS",
+        W / 2,
+        60
+    );
+
+
+    ctx.fillStyle =
+        "#f0cf55";
+
+
+    ctx.font =
+        "bold 19px Arial";
+
+
+    ctx.fillText(
+        `🪙 ${moedas}`,
+        W / 2,
+        93
+    );
+
+
+    const ids =
+        Object.keys(
+            roupas
+        );
+
+
+    ids.forEach(
+        (
+            id,
+            index
+        ) => {
+
+            const r =
+                roupas[id];
+
+
+            const col =
+                index % 3;
+
+
+            const row =
+                Math.floor(
+                    index / 3
+                );
+
+
+            const x =
+                120 +
+                col *
+                350;
+
+
+            const y =
+                125 +
+                row *
+                180;
+
+
+            ctx.fillStyle =
+                "#171717";
+
+
+            ctx.fillRect(
+                x,
+                y,
+                300,
+                145
+            );
+
+
+            ctx.strokeStyle =
+                id ===
+                roupaAtual
+                    ? "#f0cc53"
+                    : "#444";
+
+
+            ctx.lineWidth =
+                id ===
+                roupaAtual
+                    ? 4
+                    : 2;
+
+
+            ctx.strokeRect(
+                x,
+                y,
+                300,
+                145
+            );
+
+
+            // preview
+            ctx.fillStyle =
+                r.cor ||
+                skins[
+                    skinAtual
+                ].corpo;
+
+
+            ctx.beginPath();
+
+
+            ctx.arc(
+                x + 55,
+                y + 48,
+                22,
+                0,
+                Math.PI * 2
+            );
+
+
+            ctx.fill();
+
+
+            ctx.fillRect(
+                x + 38,
+                y + 70,
+                34,
+                44
+            );
+
+
+            ctx.fillStyle =
+                "#fff";
+
+
+            ctx.font =
+                "bold 17px Arial";
+
+
+            ctx.textAlign =
+                "left";
+
+
+            ctx.fillText(
+                r.nome,
+                x + 95,
+                y + 43
+            );
+
+
+            if (
+                roupasCompradas
+                .includes(id)
+            ) {
+
+                ctx.fillStyle =
+                    "#50dc75";
+
+
+                ctx.fillText(
+                    id === roupaAtual
+                        ? "EQUIPADA"
+                        : "COMPRADA",
+                    x + 95,
+                    y + 73
+                );
+
+            }
+            else {
+
+                ctx.fillStyle =
+                    "#efcc55";
+
+
+                ctx.fillText(
+                    `🪙 ${r.preco}`,
+                    x + 95,
+                    y + 73
+                );
+
+            }
+
+
+            ctx.fillStyle =
+                "#888";
+
+
+            ctx.font =
+                "13px Arial";
+
+
+            ctx.fillText(
+                `TECLA ${index + 1}`,
+                x + 95,
+                y + 103
+            );
+
+        }
+    );
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillStyle =
+        "#aaa";
+
+
+    ctx.font =
+        "17px Arial";
+
+
+    ctx.fillText(
+        "1-6 comprar/equipar • ESC voltar",
+        W / 2,
+        650
+    );
+
+}
+
+
+// ======================================================
+// PERSONAGEM
+// ======================================================
+
+function desenharPersonagemMenu() {
+
+    desenharFundo();
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 40px Arial";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillText(
+        "ESCOLHA SEU LUTADOR",
+        W / 2,
+        65
+    );
+
+
+    const ids =
+        Object.keys(
+            classes
+        );
+
+
+    ids.forEach(
+        (
+            id,
+            index
+        ) => {
+
+            const p =
+                classes[id];
+
+
+            const x =
+                120 +
+                index *
+                350;
+
+
+            const y =
+                140;
+
+
+            ctx.fillStyle =
+                "#171717";
+
+
+            ctx.fillRect(
+                x,
+                y,
+                280,
+                390
+            );
+
+
+            ctx.strokeStyle =
+                id ===
+                classeAtual
+                    ? "#f1ce53"
+                    : "#444";
+
+
+            ctx.lineWidth =
+                id ===
+                classeAtual
+                    ? 4
+                    : 2;
+
+
+            ctx.strokeRect(
+                x,
+                y,
+                280,
+                390
+            );
+
+
+            ctx.fillStyle =
+                skins[
+                    skinAtual
+                ].corpo;
+
+
+            ctx.beginPath();
+
+
+            ctx.arc(
+                x + 140,
+                y + 70,
+                35,
+                0,
+                Math.PI * 2
+            );
+
+
+            ctx.fill();
+
+
+            ctx.fillRect(
+                x + 100,
+                y + 110,
+                80,
+                105
+            );
+
+
+            ctx.fillStyle =
+                "#fff";
+
+
+            ctx.font =
+                "bold 20px Arial";
+
+
+            ctx.textAlign =
+                "center";
+
+
+            ctx.fillText(
+                p.nome,
+                x + 140,
+                y + 255
+            );
+
+
+            ctx.fillStyle =
+                "#58da79";
+
+
+            ctx.font =
+                "15px Arial";
+
+
+            ctx.fillText(
+                "VIDA: 1000",
+                x + 140,
+                y + 292
+            );
+
+
+            ctx.fillText(
+                `ATAQUE: ${p.ataque}`,
+                x + 140,
+                y + 318
+            );
+
+
+            ctx.fillStyle =
+                "#55a4ff";
+
+
+            ctx.fillText(
+                `VELOCIDADE: ${p.velocidade}`,
+                x + 140,
+                y + 345
+            );
+
+
+            ctx.fillStyle =
+                "#65ded5";
+
+
+            ctx.fillText(
+                `ENERGIA: ${p.energia}`,
+                x + 140,
+                y + 372
+            );
+
+
+            ctx.fillStyle =
+                "#888";
+
+
+            ctx.fillText(
+                `TECLA ${index + 1}`,
+                x + 140,
+                y + 400
+            );
+
+        }
+    );
+
+
+    ctx.fillStyle =
+        "#aaa";
+
+
+    ctx.font =
+        "17px Arial";
+
+
+    ctx.fillText(
+        "1 = Guerreiro • 2 = Tanque • 3 = Veloz • ESC voltar",
+        W / 2,
+        650
+    );
+
+}
+
+
+// ======================================================
+// INVENTÁRIO
+// ======================================================
+
+function desenharInventario() {
+
+    desenharFundo();
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 42px Arial";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillText(
+        "INVENTÁRIO",
+        W / 2,
+        65
+    );
+
+
+    ctx.fillStyle =
+        "#efcf54";
+
+
+    ctx.font =
+        "bold 18px Arial";
+
+
+    ctx.fillText(
+        `🪙 ${moedas}`,
+        W / 2,
+        100
+    );
+
+
+    ctx.fillStyle =
+        "#aaa";
+
+
+    ctx.font =
+        "17px Arial";
+
+
+    ctx.fillText(
+        `Classe: ${classes[classeAtual].nome}`,
+        W / 2,
+        130
+    );
+
+
+    ctx.fillText(
+        `Skin: ${skins[skinAtual].nome}`,
+        W / 2,
+        155
+    );
+
+
+    ctx.fillText(
+        `Roupa equipada: ${roupas[roupaAtual].nome}`,
+        W / 2,
+        180
+    );
+
+
+    let index =
+        0;
+
+
+    roupasCompradas.forEach(
+        id => {
+
+            if (
+                id ===
+                "nenhuma"
+            ) {
+
+                return;
+
+            }
+
+
+            const r =
+                roupas[id];
+
+
+            const x =
+                140 +
+                (
+                    index % 3
+                ) *
+                350;
+
+
+            const y =
+                220 +
+                Math.floor(
+                    index / 3
+                ) *
+                180;
+
+
+            ctx.fillStyle =
+                "#171717";
+
+
+            ctx.fillRect(
+                x,
+                y,
+                290,
+                145
+            );
+
+
+            ctx.strokeStyle =
+                id === roupaAtual
+                    ? "#f0cc53"
+                    : "#444";
+
+
+            ctx.lineWidth =
+                3;
+
+
+            ctx.strokeRect(
+                x,
+                y,
+                290,
+                145
+            );
+
+
+            ctx.fillStyle =
+                r.cor;
+
+
+            ctx.beginPath();
+
+
+            ctx.arc(
+                x + 55,
+                y + 50,
+                22,
+                0,
+                Math.PI * 2
+            );
+
+
+            ctx.fill();
+
+
+            ctx.fillRect(
+                x + 38,
+                y + 72,
+                34,
+                42
+            );
+
+
+            ctx.fillStyle =
+                "#fff";
+
+
+            ctx.font =
+                "bold 16px Arial";
+
+
+            ctx.textAlign =
+                "left";
+
+
+            ctx.fillText(
+                r.nome,
+                x + 95,
+                y + 55
+            );
+
+
+            ctx.fillStyle =
+                id === roupaAtual
+                    ? "#4cdb72"
+                    : "#aaa";
+
+
+            ctx.font =
+                "14px Arial";
+
+
+            ctx.fillText(
+                id === roupaAtual
+                    ? "EQUIPADA"
+                    : "COMPRADA",
+                x + 95,
+                y + 83
+            );
+
+
+            index++;
+
+        }
+    );
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillStyle =
+        "#aaa";
+
+
+    ctx.fillText(
+        "ESC voltar",
+        W / 2,
+        650
+    );
+
+}
+
+
+// ======================================================
+// COMPRAR ROUPA
+// ======================================================
+
+function comprarOuEquiparRoupa(
+    id
+) {
+
+    const roupa =
+        roupas[id];
+
+
+    if (
+        roupasCompradas
+        .includes(id)
+    ) {
+
+        roupaAtual =
+            id;
+
+
+        salvar();
+
+
+        popup(
+            `${roupa.nome} equipada`
+        );
+
+
+        return;
+
+    }
+
+
+    if (
+        moedas <
+        roupa.preco
+    ) {
+
+        popup(
+            "Moedas insuficientes"
+        );
+
+
+        beep(
+            100,
+            .12,
+            "square",
+            .05
+        );
+
+
+        return;
+
+    }
+
+
+    moedas -=
+        roupa.preco;
+
+
+    roupasCompradas.push(
+        id
+    );
+
+
+    roupaAtual =
+        id;
+
+
+    salvar();
+
+
+    popup(
+        `${roupa.nome} desbloqueada!`
+    );
+
+
+    beep(
+        700,
+        .15,
+        "sine",
+        .08
+    );
+
+}
+
+
+// ======================================================
+// INICIAR
+// ======================================================
+
+function iniciarTorre() {
+
+    tela =
+        "jogo";
+
+
+    andar =
+        1;
+
+
+    pontos =
+        0;
+
+
+    combo =
+        0;
+
+
+    maiorCombo =
+        0;
+
+
+    esperando =
+        false;
+
+
+    fim =
+        false;
+
+
+    jogador.dancando =
+        false;
+
+
+    cura.ativa =
+        false;
+
+
+    cura.contador =
+        600;
+
+
+    criarInimigo();
+
+}
+
+
+// ======================================================
+// POPUP
+// ======================================================
+
+function desenharPopup() {
+
+    if (
+        popupTimer <= 0
+    ) {
+
+        return;
+
+    }
+
+
+    popupTimer--;
+
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.78)";
+
+
+    ctx.fillRect(
+        430,
+        H - 95,
+        340,
+        52
+    );
+
+
+    ctx.fillStyle =
+        "#fff";
+
+
+    ctx.font =
+        "bold 17px Arial";
+
+
+    ctx.textAlign =
+        "center";
+
+
+    ctx.fillText(
+        textoPopup,
+        600,
+        H - 63
+    );
+
+}
+
+
+// ======================================================
+// RENDER
+// ======================================================
+
+function renderizar() {
+
+    if (
+        tela ===
+        "menu"
+    ) {
+
+        desenharMenu();
+
+    }
+
+    else if (
+        tela ===
+        "loja"
+    ) {
+
+        desenharLoja();
+
+    }
+
+    else if (
+        tela ===
+        "personagem"
+    ) {
+
+        desenharPersonagemMenu();
+
+    }
+
+    else if (
+        tela ===
+        "inventario"
+    ) {
+
+        desenharInventario();
+
+    }
+
+    else if (
+        tela ===
+        "jogo"
+    ) {
+
+        desenharJogo();
+
+    }
+
+
+    desenharPopup();
+
+}
+
+
+// ======================================================
+// LOOP
+// ======================================================
+
+function loop() {
+
+    atualizarJogador();
+
+    atualizarInimigo();
+
+    atualizarCura();
+
+    atualizarParticulas();
+
+    renderizar();
+
+    requestAnimationFrame(
+        loop
+    );
+
+}
+
+
+// ======================================================
+// BOTÃO MENU
+// ======================================================
+
+canvas.addEventListener(
+    "click",
+    e => {
+
+        iniciarAudio();
+
+
+        const rect =
+            canvas.getBoundingClientRect();
+
+
+        const escalaX =
+            W /
+            rect.width;
+
+
+        const escalaY =
+            H /
+            rect.height;
+
+
+        const x =
+            (
+                e.clientX -
+                rect.left
+            ) *
+            escalaX;
+
+
+        const y =
+            (
+                e.clientY -
+                rect.top
+            ) *
+            escalaY;
+
+
+        if (
+            tela ===
+            "menu"
+        ) {
+
+            if (
+                x >= 410 &&
+                x <= 790 &&
+                y >= 240 &&
+                y <= 302
+            ) {
+
+                iniciarTorre();
+
+            }
+
+
+            else if (
+                x >= 410 &&
+                x <= 790 &&
+                y >= 315 &&
+                y <= 377
+            ) {
+
+                tela =
+                    "loja";
+
+            }
+
+
+            else if (
+                x >= 410 &&
+                x <= 790 &&
+                y >= 390 &&
+                y <= 452
+            ) {
+
+                tela =
+                    "personagem";
+
+            }
+
+
+            else if (
+                x >= 410 &&
+                x <= 790 &&
+                y >= 465 &&
+                y <= 527
+            ) {
+
+                tela =
+                    "inventario";
+
+            }
+
+        }
+
+    }
+);
+
+
+// ======================================================
+// INICIAR
+// ======================================================
+
+configurarJogador();
+
+criarInimigo();
+
+loop();
+
+</script>
 
 </body>
-
 </html>
-```

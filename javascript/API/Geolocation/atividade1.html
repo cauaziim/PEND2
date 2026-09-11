@@ -35,45 +35,83 @@
     <main id="conteudo" class="container">
 
         <header>
-            <div class="icone-header">📍</div>
+
+            <div class="icone-header">
+                📍
+            </div>
 
             <div>
                 <h1>Localização & Câmera</h1>
-                <p>Informações obtidas através das Web APIs.</p>
+
+                <p>
+                    Informações obtidas através das Web APIs.
+                </p>
             </div>
+
         </header>
 
 
         <section class="cards">
 
-            <!-- LOCALIZAÇÃO -->
+            <!-- =========================
+                 LOCALIZAÇÃO
+            ========================== -->
+
             <div class="card">
 
                 <div class="titulo-card">
+
                     <span>📍</span>
 
                     <div>
                         <h2>Localização</h2>
-                        <small>✅ Acesso permitido</small>
+
+                        <small>
+                            ✅ Acesso permitido
+                        </small>
                     </div>
+
                 </div>
 
 
                 <div class="dados">
 
                     <div class="dado">
-                        <label>Latitude</label>
-                        <strong id="latitude">Aguardando...</strong>
+
+                        <label>
+                            Latitude
+                        </label>
+
+                        <strong id="latitude">
+                            Aguardando...
+                        </strong>
+
                     </div>
 
-                    <div class="dado">
-                        <label>Longitude</label>
-                        <strong id="longitude">Aguardando...</strong>
-                    </div>
 
                     <div class="dado">
-                        <label>Precisão</label>
-                        <strong id="precisao">Aguardando...</strong>
+
+                        <label>
+                            Longitude
+                        </label>
+
+                        <strong id="longitude">
+                            Aguardando...
+                        </strong>
+
+                    </div>
+
+
+                    <div class="dado">
+
+                        <label>
+                            Precisão
+                        </label>
+
+                        <strong id="precisao">
+                            Aguardando...
+                        </strong>
+
                     </div>
 
                 </div>
@@ -81,18 +119,28 @@
             </div>
 
 
-            <!-- CÂMERA -->
+            <!-- =========================
+                 CÂMERA
+            ========================== -->
+
             <div class="card">
 
                 <div class="titulo-card">
+
                     <span>📷</span>
 
                     <div>
                         <h2>Câmera</h2>
-                        <small>Solicite o acesso abaixo</small>
+
+                        <small id="statusCamera">
+                            Solicite o acesso abaixo
+                        </small>
                     </div>
+
                 </div>
 
+
+                <!-- CÂMERA AO VIVO -->
 
                 <div class="camera">
 
@@ -102,17 +150,71 @@
                         playsinline>
                     </video>
 
-                    <div id="mensagemCamera" class="mensagem-camera">
+
+                    <div
+                        id="mensagemCamera"
+                        class="mensagem-camera">
+
                         <span>📷</span>
-                        <p>Câmera desativada</p>
+
+                        <p>
+                            Câmera desativada
+                        </p>
+
                     </div>
 
                 </div>
 
 
-                <button onclick="abrirCamera()">
-                    📷 Ativar câmera
-                </button>
+                <!-- CANVAS USADO PARA CAPTURAR A IMAGEM -->
+
+                <canvas
+                    id="canvas"
+                    style="display: none;">
+                </canvas>
+
+
+                <!-- IMAGEM CAPTURADA -->
+
+                <div
+                    id="areaFoto"
+                    class="area-foto">
+
+                    <h3>
+                        📸 Imagem capturada
+                    </h3>
+
+                    <img
+                        id="fotoCapturada"
+                        alt="Imagem capturada pela câmera">
+
+                </div>
+
+
+                <!-- BOTÕES -->
+
+                <div class="botoes-camera">
+
+                    <button
+                        id="botaoCamera"
+                        onclick="abrirCamera()">
+
+                        📷 Ativar câmera
+
+                    </button>
+
+
+                    <button
+                        id="botaoCapturar"
+                        onclick="capturarImagem()"
+                        class="botao-capturar"
+                        disabled>
+
+                        📸 Capturar imagem
+
+                    </button>
+
+                </div>
 
             </div>
 
@@ -120,18 +222,25 @@
 
 
         <footer>
-            Geolocation API • MediaDevices API
+            Geolocation API • MediaDevices API • Canvas API
         </footer>
 
     </main>
 
 
     <!-- TELA DE ERRO -->
-    <div id="erro" class="erro">
 
-        <div class="icone-erro">❌</div>
+    <div
+        id="erro"
+        class="erro">
 
-        <h1>Localização não permitida</h1>
+        <div class="icone-erro">
+            ❌
+        </div>
+
+        <h1>
+            Localização não permitida
+        </h1>
 
         <p>
             Você precisa permitir o acesso à localização
