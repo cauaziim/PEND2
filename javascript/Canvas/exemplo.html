@@ -1,0 +1,117 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-br">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>X1 Arena Multiplayer</title>
+
+    <link rel="stylesheet" href="exemplo.css">
+
+</head>
+
+<body>
+
+    <div class="topo">
+
+        <h1>X1 ARENA</h1>
+
+        <p id="status">
+            Procurando adversário...
+        </p>
+
+    </div>
+
+    <div class="placar">
+
+        <div class="player-info">
+
+            <span>JOGADOR 1</span>
+
+            <div class="barra">
+
+                <div
+                    id="vida1"
+                    class="vida"
+                ></div>
+
+            </div>
+
+            <strong id="textoVida1">
+                100 HP
+            </strong>
+
+        </div>
+
+        <div class="vs">
+            VS
+        </div>
+
+        <div class="player-info">
+
+            <span>JOGADOR 2</span>
+
+            <div class="barra">
+
+                <div
+                    id="vida2"
+                    class="vida"
+                ></div>
+
+            </div>
+
+            <strong id="textoVida2">
+                100 HP
+            </strong>
+
+        </div>
+
+    </div>
+
+    <div class="arena-container">
+
+        <canvas
+            id="canvas"
+            width="900"
+            height="500"
+        ></canvas>
+
+        <div
+            id="mensagem"
+            class="mensagem escondido"
+        >
+        </div>
+
+    </div>
+
+    <div class="controles">
+
+        <h2>CONTROLES</h2>
+
+        <p>
+            <strong>W A S D</strong>
+            ou
+            <strong>SETAS</strong>
+            para movimentar
+        </p>
+
+        <p>
+            Encoste no adversário para atacar.
+        </p>
+
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="exemplo.js"></script>
+
+</body>
+
+</html>
+```
