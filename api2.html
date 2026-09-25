@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CSS</title>
+
+    <link rel="stylesheet" href="api2.css">
+</head>
+
+<body>
+
+    <header class="header">
+
+        <div class="logo">
+            <span></span>
+            CSS
+        </div>
+
+        <nav>
+            <a href="#">Início</a>
+            <a href="#noticias">Notícias</a>
+        </nav>
+
+    </header>
+
+    <section class="hero">
+
+        <div class="hero-content">
+
+            <div class="hero-left">
+
+                <h1>
+                    CSS - Notícias
+                </h1>
+
+                <p>
+                    Da uma pesquisada ai para saber mais!.
+                </p>
+
+
+                <!-- PESQUISA DE NOTÍCIAS -->
+
+                <div class="search-box">
+
+                    <input
+                        type="text"
+                        id="campoPesquisa"
+                        placeholder="manda ai oque voce quer saber..."
+                    >
+
+                    <button id="btnPesquisar">
+                        Pesquisar
+                    </button>
+
+                </div>
+
+            </div>
+
+            <div class="hero-right">
+
+                <div class="clima-box">
+
+                    <h2>
+                        🌤️ Clima
+                    </h2>
+
+                    <p class="clima-subtitulo">
+                        Consulte o clima de qualquer cidade
+                    </p>
+
+
+                    <!-- PESQUISA DO CLIMA -->
+
+                    <div class="clima-pesquisa">
+
+                        <input
+                            type="text"
+                            id="cidadeClima"
+                            placeholder="Digite uma cidade..."
+                        >
+
+                        <button id="btnClima">
+                            Ver clima
+                        </button>
+
+                    </div>
+
+
+                    <!-- CARREGANDO -->
+
+                    <div
+                        id="climaLoading"
+                        class="clima-loading"
+                    >
+                        Buscando clima...
+                    </div>
+
+
+                    <!-- ERRO -->
+
+                    <div
+                        id="climaErro"
+                        class="clima-erro"
+                    ></div>
+
+
+                    <!-- RESULTADO -->
+
+                    <div id="resultadoClima">
+
+                        <h3 id="nomeCidade"></h3>
+
+                        <div id="iconeClima"></div>
+
+                        <div id="temperatura"></div>
+
+                        <p id="descricaoClima"></p>
+
+
+                        <div class="dados-clima">
+
+                            <p>
+                                🌡️ Sensação:
+                                <span id="sensacao"></span>
+                            </p>
+
+                            <p>
+                                💧 Umidade:
+                                <span id="umidade"></span>
+                            </p>
+
+                            <p>
+                                💨 Vento:
+                                <span id="vento"></span>
+                            </p>
+
+                            <p>
+                                🌧️ Chuva:
+                                <span id="chuva"></span>
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =========================
+                     BOLSA
+                ========================== -->
+
+                <div class="bolsa-box">
+
+                    <div class="bolsa-titulo">
+
+                        <div>
+
+                            <span class="bolsa-mini">
+                                MERCADO
+                            </span>
+
+                            <h2>
+                                📈 Bolsa
+                            </h2>
+
+                        </div>
+
+                    </div>
+
+
+                    <p class="bolsa-subtitulo">
+                        Consulte uma ação da B3
+                    </p>
+
+
+                    <!-- PESQUISA DA BOLSA -->
+
+                    <div class="bolsa-pesquisa">
+
+                       <select type="text"
+                            id="tickerBolsa"
+                            placeholder="Ex: PETR4"
+                            maxlength="10">
+                            <option>PETR4</option>
+                            <option>VALE3</option>
+                            <option>ITUB4</option>
+                            <option>MGLU3</option>
+                        </select>
+
+                        <button id="btnBolsa">
+                            Buscar
+                        </button>
+
+                    </div>
+
+
+                    <!-- CARREGANDO -->
+
+                    <div
+                        id="bolsaLoading"
+                        class="bolsa-loading"
+                    >
+                        Consultando mercado...
+                    </div>
+
+
+                    <!-- ERRO -->
+
+                    <div
+                        id="bolsaErro"
+                        class="bolsa-erro"
+                    ></div>
+
+
+                    <!-- RESULTADO DA BOLSA -->
+
+                    <div id="resultadoBolsa">
+
+
+                        <!-- NOME E TICKER -->
+
+                        <div class="bolsa-header">
+
+                            <div>
+
+                                <span id="bolsaTicker"></span>
+
+                                <h3 id="bolsaNome"></h3>
+
+                            </div>
+
+
+                            <div id="bolsaIcone">
+                                📊
+                            </div>
+
+                        </div>
+
+
+                        <!-- PREÇO -->
+
+                        <div id="bolsaPreco">
+                            R$ 0,00
+                        </div>
+
+
+                        <!-- VARIAÇÃO -->
+
+                        <div id="bolsaVariacao">
+                            0,00%
+                        </div>
+
+
+                        <!-- DADOS -->
+
+                        <div class="bolsa-dados">
+
+
+                            <div>
+
+                                <span>
+                                    Máxima
+                                </span>
+
+                                <strong id="bolsaMaxima">
+                                    -
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Mínima
+                                </span>
+
+                                <strong id="bolsaMinima">
+                                    -
+                                </strong>
+
+                            </div>
+
+
+                            <div>
+
+                                <span>
+                                    Volume
+                                </span>
+
+                                <strong id="bolsaVolume">
+                                    -
+                                </strong>
+
+                            </div>
+
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <main id="noticias">
+
+
+        <!-- TÍTULO -->
+
+        <div class="section-title">
+
+            <div>
+
+                <span class="small-title">
+                    ATUALIZAÇÕES
+                </span>
+
+                <h2>
+                    as boa de hj
+                </h2>
+
+            </div>
+
+
+            <button
+                id="btnAtualizar"
+                class="btn-atualizar"
+            >
+                Atualizar
+            </button>
+
+        </div>
+
+
+        <div
+            id="loading"
+            class="loading"
+        >
+
+            <div class="spinner"></div>
+
+            <p>
+                Calma ae ta carregando
+            </p>
+
+        </div>
+
+        <div
+            id="erro"
+            class="erro hidden"
+        >
+
+            <div class="erro-icon"></div>
+
+            <h3>
+                Não achamos a que você procura
+            </h3>
+
+            <p>
+                ve ai se sua net ta boa.
+            </p>
+
+            <button id="btnTentarNovamente">
+                Tentar novamente
+            </button>
+
+        </div>
+
+
+        <div
+            id="listaNoticias"
+            class="news-grid"
+        ></div>
+
+
+        <div
+            id="semNoticias"
+            class="sem-noticias hidden"
+        >
+
+            <h3>
+                Não achamos
+            </h3>
+
+            <p>
+                Tente pesquiar outra noticia.
+            </p>
+
+        </div>
+
+    </main>
+
+    <footer>
+
+        <p>
+            © 2026 CSS - Todos os direitos reservados.
+        </p>
+
+    </footer>
+
+
+    <script src="api2.js"></script>
+
+</body>
+
+</html>
